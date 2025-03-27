@@ -1,0 +1,248 @@
+body {
+   font-family: Arial, sans-serif;
+   text-align: center;
+   background-color: rgb(232, 242, 247);
+   margin: 0;
+   padding-top: 0;
+   background-image: url('hospital.png');
+   background-size: cover;
+   background-position: center;
+   background-attachment: fixed;
+}
+
+.header {
+   display: flex;
+   align-items: left;
+   justify-content: center;
+   background-color:rgba(255, 255, 255, 0.89);
+   color: #0056b3;
+   padding: 10px 10px;
+   position: fixed;
+   top: 3px;
+   left: 472px;
+   width: 100%;
+   max-width: 950px;
+   text-align: center;
+   font-size: 27px;
+   z-index: 1000;
+   margin-bottom: 0;
+   border-radius: 15px;
+}
+
+.header img {
+   height: 40px;
+   margin-right: 10px;
+}
+
+.container {
+   background: rgba(255, 255, 255, 0.89); 
+   padding: 30px;
+   border-radius: 10px;
+   box-shadow: 0px 0px 10px rgba(70, 25, 25, 0.1);
+   width: 100%;
+   max-width: 950px;
+   margin: 10px auto;
+   margin-top: 77px;
+}
+
+input, textarea, button, select {
+   width: 90%;
+   padding: 10px;
+   margin: 2px 0;
+   border: 1px solid #ccc;
+   border-radius: 10px;
+   font-size: 13px;
+}
+
+button {
+   background: #0056b3;
+   color: white;
+   border: none;
+   cursor: pointer;
+}
+
+button:hover {
+   background:rgb(3, 58, 117);
+}
+
+.salida-btn {
+   background: #dc3545;
+}
+
+.salida-btn:hover {
+   background: #a71d2a;
+}
+
+.aceptar-btn {
+    background: rgb(16, 199, 40);
+}
+ 
+ .aceptar-btn:hover {
+    background: rgb(9, 124, 15);
+ }
+
+ .rechazar-btn {
+    background: rgb(228, 14, 14);
+ }
+ 
+ .rechazar-btn:hover {
+    background: rgb(131, 10, 10);
+ }
+
+table {
+   width: 100%;
+   margin-top: 20px;
+   border-collapse: separate;
+   border-spacing: 0;
+   overflow-x: auto;
+   border-radius: 15px;
+   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+table, th, td {
+   border: 1px solid #ccc;
+   word-wrap: break-word;
+   border-radius: 10px;
+}
+
+th, td {
+   padding: 10px;
+   text-align: left;
+   max-width: 200px;
+   background-color: #f9f9f9;
+}
+
+th {
+   background-color: #0056b3;
+   color: white; 
+   font-weight: bold;
+   border-top-left-radius: 10px;
+   border-top-right-radius: 10px;
+}
+
+tr:nth-child(even) {
+   background-color: #f2f2f2;
+}
+
+tr:nth-child(odd) {
+   background-color: #ffffff;
+}
+
+.aceptar-btn-table {
+    background: rgb(16, 199, 40);
+    color: white;
+    border: none;
+    cursor: pointer;
+    border-radius: 10px;
+    padding: 8px 12px;
+ }
+ 
+ .aceptar-btn-table:hover {
+    background: rgb(9, 124, 15);
+ }
+
+ .rechazar-btn-table {
+    background: rgb(228, 14, 14);
+    color: white;
+    border: none;
+    cursor: pointer;
+    border-radius: 10px;
+    padding: 8px 12px;
+ }
+ 
+ .rechazar-btn-table:hover {
+    background: rgb(131, 10, 10);
+ }
+
+.msg {
+   padding: 20px;
+   margin-top: 20px;
+   border-radius: 15px;
+   font-size: 12px;
+   max-width: 500px;
+   margin: auto;
+   font-weight: bold;
+   display: flex;
+   justify-content: center;
+   align-items: center;
+   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+   opacity: 0;
+   transition: opacity 0.7s ease-out;
+   visibility: hidden;
+}
+
+.msg.success {
+   background-color:rgb(6, 228, 73);
+   color: white;
+}
+
+.msg.error {
+   background-color: #dc3545;
+   color: white;
+}
+
+.msg.show {
+   opacity: 1;
+   visibility: visible;
+}
+
+.sub-title {
+   font-size: 17px;
+   color:#dd7603;
+}
+
+@media (max-width: 700px) {
+   .container {
+       padding: 20px;
+   }
+
+   .header{
+       display: flex;
+       justify-content: center;
+       padding: 10px 10px;
+       position: fixed;
+       left: 0px;
+       text-align: center;
+       font-size: 24px;
+       z-index: 1000;
+       margin-bottom: 0;
+       border-radius: 15px;
+   }
+
+   table {
+       display: block;
+       width: 100%;
+       overflow-x: auto;
+       white-space: nowrap;
+   }
+
+   th, td {
+       min-width: 120px;
+   }
+}
+
+@media (max-width: 1400px) {
+   .header {
+       display: flex;
+       justify-content: center;
+       padding: 10px 10px;
+       position: fixed;
+       left: 0px;
+       text-align: center;
+       font-size: 24px;
+       z-index: 1000;
+       margin-bottom: 0;
+       border-radius: 15px;
+   }
+
+   .buttons-container {
+       margin-top: 100px;
+       flex-direction: column;
+   }
+
+   .button {
+       width: 180px;
+       padding: 15px;
+       font-size: 16px;
+   }
+}
