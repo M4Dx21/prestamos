@@ -1,7 +1,6 @@
 <?php
 include 'db.php';
 
-// Función para validar el RUT
 function validarRUT($rut) {
     $rut = str_replace(array(".", "-"), "", $rut);
     
@@ -29,7 +28,6 @@ function validarRUT($rut) {
     return $dv_calculado == $rut_dv;
 }
 
-// Función para formatear el RUT
 function formatearRUT($rut) {
     $rut = str_replace(array(".", "-"), "", $rut);
     $dv = strtoupper(substr($rut, -1));
@@ -38,22 +36,20 @@ function formatearRUT($rut) {
     return $rut . '-' . $dv;
 }
 
-session_start();  // Iniciar sesión
+session_start();
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['solicitar'])) {
     $rut = $_POST['rut'];
     $pass = $_POST['pass'];
 
     if (validarRUT($rut)) {
-        // Comprobar si el usuario existe en la base de datos
         $sql = "SELECT * FROM usuarios WHERE rut = '$rut' AND pass = '$pass'";
         $result = $conn->query($sql);
 
         if ($result->num_rows > 0) {
-            // Usuario encontrado, iniciar sesión
             $_SESSION['rut'] = $rut;
             $_SESSION['nombre'] = $result->fetch_assoc()['nombre'];
-            header("Location: prestador.php");  // Redirigir a prestador.php
+            header("Location: prestador.php");
             exit();
         } else {
             $error = "Credenciales incorrectas. Intenta nuevamente.";

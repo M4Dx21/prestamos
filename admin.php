@@ -58,6 +58,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['ingresar'])) {
 
     if ($conn->query($sql_insert) === TRUE) {
         echo "Usuario registrado correctamente.";
+        header("Location: ".$_SERVER['PHP_SELF']);
+        exit();
     } else {
         echo "Error: " . $sql_insert . "<br>" . $conn->error;
     }
@@ -73,6 +75,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['insertar'])) {
 
     if ($conn->query($sql_insert) === TRUE) {
         echo "Equipo registrado correctamente.";
+        header("Location: ".$_SERVER['PHP_SELF']);
+        exit();
     } else {
         echo "Error: " . $sql_insert . "<br>" . $conn->error;
     }

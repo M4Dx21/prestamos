@@ -16,9 +16,8 @@
         if (isset($_POST['role'])) {
             session_start();
             $_SESSION['role'] = $_POST['role'];
-
             if ($_POST['role'] == 'prestador') {
-                header("Location: login_form.php?role=prestador");
+                header("Location: login.php?role=prestador");
             } elseif ($_POST['role'] == 'solicitante') {
                 header("Location: loginrut.php?role=solicitante");
             }
