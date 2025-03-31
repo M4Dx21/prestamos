@@ -50,7 +50,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['ingresar'])) {
     $rut = $_POST['rut'];
     $nombre = $_POST['nombre'];
     $pass = $_POST['pass'];
-    $rol = $_POST['rol'];
+    $rol = 'prestamista';
     $correo = $_POST['correo'];
 
     $sql_insert = "INSERT INTO usuarios (rut, nombre, pass, rol, correo) 
@@ -111,6 +111,17 @@ if ($result->num_rows > 0) {
     }
 }
 
+
+$sql1 = "SELECT rut, nombre, correo FROM usuarios";
+$result1 = $conn->query($sql1);
+
+$solicitudes_result1 = [];
+if ($result1->num_rows > 0) {
+    while ($row = $result1->fetch_assoc()) {
+        $solicitudes_result1[] = $row;
+    }
+}
+
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -132,7 +143,6 @@ if ($result->num_rows > 0) {
             <input type="text" name="rut" placeholder="RUT" required id="rut" onblur="validarRUTInput()">
             <input type="text" name="nombre" placeholder="Nombre" required id="nombre">
             <input type="password" name="pass" placeholder="Contraseña" required id="pass">
-            <input type="text" name="rol" placeholder="Rol (prestamista)" required id="rol">
             <input type="email" name="correo" placeholder="Correo" required id="correo">
             <button type="submit" name="ingresar">Registrar Usuario</button>
         </form>
@@ -165,6 +175,34 @@ if ($result->num_rows > 0) {
                                 <form method="POST" style="display: inline;">
                                     <input type="hidden" name="nro_serie" value="<?php echo $solicitud['nro_serie']; ?>">
                                     <button type="submit" name="eliminar" class="rechazar-btn-table">Eliminar</button>
+                                </form>
+                            </td>
+                        </tr>
+                    <?php endforeach; ?>
+                </tbody>
+            </table>
+        <?php endif; ?>
+        <?php if (!empty($solicitudes_result1)): ?>
+            <h3>Usuarios Registrados</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Nombre</th>
+                        <th>RUT</th>
+                        <th>Correo</th>
+                        <th>Eliminar</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php foreach ($solicitudes_result1 as $solicitud1): ?>
+                        <tr>
+                            <td><?php echo htmlspecialchars($solicitud1['nombre']); ?></td>
+                            <td><?php echo htmlspecialchars($solicitud1['rut']); ?></td>
+                            <td><?php echo htmlspecialchars($solicitud1['correo']); ?></td>
+                            <td>
+                                <form method="POST" action="">
+                                    <input type="hidden" name="rut" value="<?php echo $solicitud1['rut']; ?>">
+                                    <button type="submit" name="eliminar_usuario" class="rechazar-btn-table">Eliminar</button>
                                 </form>
                             </td>
                         </tr>

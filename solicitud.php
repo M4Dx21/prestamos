@@ -2,6 +2,18 @@
 session_start();
 include 'db.php';
 
+function getEstadoClass($estado) {
+    switch($estado) {
+        case 'rechazada':
+            return 'estado-rechazada';
+        case 'aceptada':
+            return 'estado-aceptada';
+        default:
+            return 'estado-en-proceso';
+    }
+}
+
+
 if (!isset($_SESSION['nombre']) || !isset($_SESSION['rut'])) {
     header("Location: index.php");
     exit();
@@ -73,11 +85,14 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['devolver'])) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <div class="header">
-        <img src="logo.png" alt="Logo">
-        <div class="header-text">
-            <div class="main-title">Solicitudes insumos TI</div>
-            <div class="sub-title">Hospital Clínico Félix Bulnes</div>
+    <img src="logo.png" alt="Logo">
+    <div class="header-text">
+        <div class="main-title">Solicitudes insumos TI</div>
+        <div class="sub-title">Hospital Clínico Félix Bulnes</div>
         </div>
+        <form action="logout.php" method="POST">
+            <button type="submit" class="logout-btn">Salir</button>
+        </form>
     </div>
 </head>
 <body>
@@ -115,7 +130,21 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['devolver'])) {
                 </thead>
                 <tbody>
                     <?php foreach ($solicitudes_result as $solicitud): ?>
-                        <tr>
+                        <?php 
+                        $estado_class = '';
+                        switch ($solicitud['estado']) {
+                            case 'en proceso':
+                                $estado_class = 'estado-en-proceso';
+                                break;
+                            case 'terminada':
+                                $estado_class = 'estado-aceptada';
+                                break;
+                            case 'aceptada':
+                                $estado_class = 'estado-rechazada';
+                                break;
+                        }
+                                    ?>
+                        <tr class="<?php echo $estado_class; ?>">
                             <td><?php echo htmlspecialchars($solicitud['nombre_solicitante']); ?></td>
                             <td><?php 
                                 $nro_serie_equipo = $solicitud['nro_serie_equipo'];
@@ -146,7 +175,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['devolver'])) {
                                     <form method="POST" action="">
                                         <input type="hidden" name="nro_serie" value="<?php echo $solicitud['nro_serie_equipo']; ?>">
                                         <input type="hidden" name="id_solicitud" value="<?php echo $solicitud['id']; ?>">
-                                        <button type="submit" name="devolver" class="aceptar-btn-table">Devolver Equipo</button>
+                                        <button type="submit" name="devolver" class="rechazar-btn-table">Devolver Equipo</button>
                                     </form>
                                 <?php endif; ?>
                             </td>

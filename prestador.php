@@ -1,4 +1,3 @@
-
 <?php
 session_start();
 include 'db.php';
@@ -84,11 +83,14 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["rechazar"])) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <div class="header">
-        <img src="logo.png" alt="Logo">
-        <div class="header-text">
-            <div class="main-title">Solicitudes insumos TI</div>
-            <div class="sub-title">Hospital Clínico Félix Bulnes</div>
+    <img src="logo.png" alt="Logo">
+    <div class="header-text">
+        <div class="main-title">Solicitudes insumos TI</div>
+        <div class="sub-title">Hospital Clínico Félix Bulnes</div>
         </div>
+        <form action="logout.php" method="POST">
+            <button type="submit" class="logout-btn">Salir</button>
+        </form>
     </div>
 </head>
 <body>
@@ -108,7 +110,21 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["rechazar"])) {
                 </thead>
                 <tbody>
     <?php foreach ($solicitudes_result as $solicitud): ?>
-        <tr>
+        <?php 
+            $estado_class = '';
+            switch ($solicitud['estado']) {
+                case 'en proceso':
+                    $estado_class = 'estado-en-proceso';
+                    break;
+                case 'terminada':
+                    $estado_class = 'estado-aceptada';
+                    break;
+                case 'aceptada':
+                    $estado_class = 'estado-rechazada';
+                    break;
+            }
+        ?>
+        <tr class="<?php echo $estado_class; ?>">
             <td><?php echo htmlspecialchars($solicitud['rut']); ?></td>
             <td><?php echo htmlspecialchars($solicitud['nombre_solicitante']); ?></td>
             <td><?php 
@@ -151,4 +167,5 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["rechazar"])) {
 </html>
 <?php
 $conn->close();
-?>
+?>  
+
