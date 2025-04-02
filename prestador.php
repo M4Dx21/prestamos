@@ -7,7 +7,16 @@ if (!isset($_SESSION['rut'])) {
     exit();
 }
 
-$sql_check = "SELECT id, nombre_solicitante, rut, fecha_solicitud, motivo_solicitud, fecha_entrega, nro_serie_equipo, estado FROM solicitudes";
+$resolucion_filtro = isset($_POST['resolucion']) ? $_POST['resolucion'] : '';
+
+$sql_check = "SELECT id, nombre_solicitante, rut, fecha_solicitud, motivo_solicitud, fecha_entrega, nro_serie_equipo, estado FROM solicitudes WHERE 1";
+
+if ($resolucion_filtro) {
+    $sql_check .= " AND estado = '$resolucion_filtro'";
+}
+
+$sql_check .= " ORDER BY estado = 'en proceso' DESC, fecha_solicitud ASC";
+
 $result = $conn->query($sql_check);
 $solicitudes_result = [];
 
@@ -75,6 +84,19 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["rechazar"])) {
     }
 }
 
+if (isset($_POST['limpiar_filtros'])) {
+    $resolucion_filtro = '';
+    header("Location: ".$_SERVER['PHP_SELF']);
+    exit();
+}
+
+$sql_check = "SELECT id, nombre_solicitante, rut, fecha_solicitud, motivo_solicitud, fecha_entrega, nro_serie_equipo, estado FROM solicitudes WHERE 1";
+
+if ($resolucion_filtro) {
+    $sql_check .= " AND estado = '$resolucion_filtro'";
+}
+$sql_check .= " ORDER BY estado = 'en proceso' DESC, fecha_solicitud ASC";
+
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -83,18 +105,38 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["rechazar"])) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <div class="header">
-    <img src="logo.png" alt="Logo">
-    <div class="header-text">
-        <div class="main-title">Solicitudes insumos TI</div>
-        <div class="sub-title">Hospital Clínico Félix Bulnes</div>
+        <img src="logo.png" alt="Logo">
+        <div class="header-text">
+            <div class="main-title">Solicitudes insumos TI</div>
+            <div class="sub-title">Hospital Clínico Félix Bulnes</div>
         </div>
-        <form action="logout.php" method="POST">
-            <button type="submit" class="logout-btn">Salir</button>
-        </form>
+        <button id="cuenta-btn" onclick="toggleAccountInfo()">Sesion</button>
+        <div id="accountInfo" style="display: none;">
+            <p><strong>Usuario: </strong><?php echo $_SESSION['rut']; ?></p>
+            <p><strong>Nombre: </strong><?php echo $_SESSION['nombre']; ?></p>
+            <form action="logout.php" method="POST">
+                <button type="submit" class="logout-btn">Salir</button>
+            </form>
+        </div>
     </div>
 </head>
 <body>
     <div class="container">
+        <div class="filters">
+            <form method="POST" action="">
+                <label for="resolucion">Filtrar por:</label>
+                <select name="resolucion" id="resolucion">
+                    <option value="">--Seleccionar--</option>
+                    <option value="aceptada" <?php echo $resolucion_filtro == 'aceptada' ? 'selected' : ''; ?>>Aceptada</option>
+                    <option value="rechazada" <?php echo $resolucion_filtro == 'rechazada' ? 'selected' : ''; ?>>Rechazada</option>
+                    <option value="en proceso" <?php echo $resolucion_filtro == 'en proceso' ? 'selected' : ''; ?>>En Proceso</option>
+                    <option value="terminada" <?php echo $resolucion_filtro == 'terminada' ? 'selected' : ''; ?>>Terminada</option>
+                </select>
+                <button type="submit">Filtrar</button>
+                <button type="submit" name="limpiar_filtros" class="limpiar-filtros-btn">Limpiar Filtros</button>
+            </form>
+        </div>
+
         <?php if (!empty($solicitudes_result)): ?>
             <table>
                 <thead>
@@ -109,63 +151,73 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["rechazar"])) {
                     </tr>
                 </thead>
                 <tbody>
-    <?php foreach ($solicitudes_result as $solicitud): ?>
-        <?php 
-            $estado_class = '';
-            switch ($solicitud['estado']) {
-                case 'en proceso':
-                    $estado_class = 'estado-en-proceso';
-                    break;
-                case 'terminada':
-                    $estado_class = 'estado-aceptada';
-                    break;
-                case 'aceptada':
-                    $estado_class = 'estado-rechazada';
-                    break;
-            }
-        ?>
-        <tr class="<?php echo $estado_class; ?>">
-            <td><?php echo htmlspecialchars($solicitud['rut']); ?></td>
-            <td><?php echo htmlspecialchars($solicitud['nombre_solicitante']); ?></td>
-            <td><?php 
-                $nro_serie_equipo = $solicitud['nro_serie_equipo'];
-                $sql_equipo = "SELECT nombre_equipo FROM equipos WHERE nro_serie = '$nro_serie_equipo'";
-                $equipo_result = $conn->query($sql_equipo);
-                $equipo = $equipo_result->fetch_assoc();
-                echo htmlspecialchars($equipo['nombre_equipo']);?></td>
-            <td><?php echo htmlspecialchars($solicitud['nro_serie_equipo']); ?></td>
-            <td><?php 
-                $fecha_solicitud = new DateTime($solicitud['fecha_solicitud']);
-                echo $fecha_solicitud->format('d/m/y');
-            ?></td>
-            <td><?php echo htmlspecialchars($solicitud['estado']); ?></td>
-            <td>
-                <?php if ($solicitud['estado'] == 'en proceso'): ?>
-                    <form method="POST" style="display: inline;">
-                        <input type="hidden" name="id" value="<?php echo $solicitud['id']; ?>">
-                        <input type="hidden" name="nro_serie" value="<?php echo $solicitud['nro_serie_equipo']; ?>">
-                        <button type="submit" name="aceptar" class="aceptar-btn-table">Aceptar</button>
-                    </form>
-                    <form method="POST" style="display: inline;">
-                        <input type="hidden" name="id" value="<?php echo $solicitud['id']; ?>">
-                        <input type="hidden" name="nro_serie" value="<?php echo $solicitud['nro_serie_equipo']; ?>">
-                        <input type="text" name="motivo_rechazo" placeholder="Motivo de rechazo" required>
-                        <button type="submit" name="rechazar" class="rechazar-btn-table">Rechazar</button>
-                    </form>
-                <?php endif; ?>
-            </td>
-        </tr>
-    <?php endforeach; ?>
-</tbody>
-
+                    <?php foreach ($solicitudes_result as $solicitud): ?>
+                        <?php 
+                            $estado_class = '';
+                            switch ($solicitud['estado']) {
+                                case 'en proceso':
+                                    $estado_class = 'estado-en-proceso';
+                                    break;
+                                case 'terminada':
+                                    $estado_class = 'estado-aceptada';
+                                    break;
+                                case 'aceptada':
+                                    $estado_class = 'estado-rechazada';
+                                    break;
+                            }
+                        ?>
+                        <tr class="<?php echo $estado_class; ?>">
+                            <td><?php echo htmlspecialchars($solicitud['rut']); ?></td>
+                            <td><?php echo htmlspecialchars($solicitud['nombre_solicitante']); ?></td>
+                            <td><?php 
+                                $nro_serie_equipo = $solicitud['nro_serie_equipo'];
+                                $sql_equipo = "SELECT nombre_equipo FROM equipos WHERE nro_serie = '$nro_serie_equipo'";
+                                $equipo_result = $conn->query($sql_equipo);
+                                $equipo = $equipo_result->fetch_assoc();
+                                echo htmlspecialchars($equipo['nombre_equipo']);
+                            ?></td>
+                            <td><?php echo htmlspecialchars($solicitud['nro_serie_equipo']); ?></td>
+                            <td><?php 
+                                $fecha_solicitud = new DateTime($solicitud['fecha_solicitud']);
+                                echo $fecha_solicitud->format('d/m/y');
+                            ?></td>
+                            <td><?php echo htmlspecialchars($solicitud['estado']); ?></td>
+                            <td>
+                                <?php if ($solicitud['estado'] == 'en proceso'): ?>
+                                    <form method="POST" style="display: inline;">
+                                        <input type="hidden" name="id" value="<?php echo $solicitud['id']; ?>">
+                                        <input type="hidden" name="nro_serie" value="<?php echo $solicitud['nro_serie_equipo']; ?>">
+                                        <button type="submit" name="aceptar" class="aceptar-btn-table">Aceptar</button>
+                                    </form>
+                                    <form method="POST" style="display: inline;">
+                                        <input type="hidden" name="id" value="<?php echo $solicitud['id']; ?>">
+                                        <input type="hidden" name="nro_serie" value="<?php echo $solicitud['nro_serie_equipo']; ?>">
+                                        <input type="text" name="motivo_rechazo" placeholder="Motivo de rechazo" required>
+                                        <button type="submit" name="rechazar" class="rechazar-btn-table">Rechazar</button>
+                                    </form>
+                                <?php endif; ?>
+                            </td>
+                        </tr>
+                    <?php endforeach; ?>
+                </tbody>
             </table>
-            <?php else: ?>
+        <?php else: ?>
             <p>No hay solicitudes disponibles.</p>
         <?php endif; ?>
     </div>
+
+    <script>
+        function toggleAccountInfo() {
+            var accountInfo = document.getElementById('accountInfo');
+            if (accountInfo.style.display === "none") {
+                accountInfo.style.display = "block";
+            } else {
+                accountInfo.style.display = "none";
+            }
+        }
+    </script>
 </body>
 </html>
 <?php
 $conn->close();
-?>  
-
+?>

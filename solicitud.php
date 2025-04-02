@@ -1,6 +1,9 @@
 <?php
 session_start();
 include 'db.php';
+use PHPMailer\PHPMailer\PHPMailer;
+use PHPMailer\PHPMailer\Exception;
+require 'vendor/autoload.php';
 
 function getEstadoClass($estado) {
     switch($estado) {
@@ -12,7 +15,6 @@ function getEstadoClass($estado) {
             return 'estado-en-proceso';
     }
 }
-
 
 if (!isset($_SESSION['nombre']) || !isset($_SESSION['rut'])) {
     header("Location: index.php");
@@ -34,6 +36,23 @@ if ($result->num_rows > 0) {
     }
 }
 
+if (isset($_GET['nombre_equipo'])) {
+    $nombre_equipo = $_GET['nombre_equipo'];
+
+    $sql = "SELECT nro_serie FROM equipos WHERE nombre_equipo = ? AND estado = 'disponible'";
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param("s", $nombre_equipo);
+    $stmt->execute();
+    $result = $stmt->get_result();
+
+    $numeros_serie = [];
+    while ($row = $result->fetch_assoc()) {
+        $numeros_serie[] = $row['nro_serie'];
+    }
+
+    echo json_encode($numeros_serie);
+}
+
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['solicitar'])) {
     $rut = $_POST['rut'];
     $nombre = $_POST['nombre'];
@@ -46,6 +65,45 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['solicitar'])) {
     if ($conn->query($sql_insert) === TRUE) {
         $sql_update = "UPDATE equipos SET estado = 'no disponible' WHERE nro_serie = '$nro_serie'";
         if ($conn->query($sql_update) === TRUE) {
+
+            $sql_correos = "SELECT correo FROM usuarios";
+            $result_correos = $conn->query($sql_correos);
+            
+            if ($result_correos->num_rows > 0) {
+                while ($row = $result_correos->fetch_assoc()) {
+                    $correo = $row['correo'];
+
+                    $mail = new PHPMailer(true);
+                    try {
+                        $mail->isSMTP();
+                        $mail->Host = 'smtp.gmail.com';
+                        $mail->SMTPAuth = true;
+                        $mail->Username = 'valdiviaalejandro2001@gmail.com';
+                        $mail->Password = 'huyu fyqt jdll ayrh';
+                        $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
+                        $mail->Port = 587;
+
+                        $mail->setFrom('valdiviaalejandro2001@gmail.com', 'Sistema de Solicitudes TI');
+                        $mail->addAddress($correo);
+
+                        $mail->Subject = "Nueva Solicitud Registrada";
+                        $mail->Body    = "Se ha registrado una nueva solicitud de equipo. Detalles:\n\n";
+                        $mail->Body   .= "Solicitante: $nombre\n";
+                        $mail->Body   .= "RUT: $rut\n";
+                        $mail->Body   .= "Número de serie del equipo: $nro_serie\n";
+                        $mail->Body   .= "Motivo de la solicitud: $motivo\n";
+                        $mail->Body   .= "Fecha de solicitud: " . date("d/m/Y") . "\n\n";
+                        $mail->Body   .= "Atentamente,\nSistema de Solicitudes TI";
+
+                        $mail->send();
+                    } catch (Exception $e) {
+                        echo "Error al enviar el correo a: $correo. Error: {$mail->ErrorInfo}\n";
+                    }
+                }
+            } else {
+                echo "No se encontraron usuarios con correo registrado.";
+            }
+
             header("Location: ".$_SERVER['PHP_SELF']);
             exit();
         } else {
@@ -85,36 +143,49 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['devolver'])) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <div class="header">
-    <img src="logo.png" alt="Logo">
-    <div class="header-text">
-        <div class="main-title">Solicitudes insumos TI</div>
-        <div class="sub-title">Hospital Clínico Félix Bulnes</div>
+        <img src="logo.png" alt="Logo">
+        <div class="header-text">
+            <div class="main-title">Solicitar insumos de TI</div>
+            <div class="sub-title">Hospital Clínico Félix Bulnes</div>
         </div>
-        <form action="logout.php" method="POST">
-            <button type="submit" class="logout-btn">Salir</button>
-        </form>
+        <button id="cuenta-btn" onclick="toggleAccountInfo()">Sesion</button>
+        <div id="accountInfo" style="display: none;">
+            <p><strong>Usuario: </strong><?php echo $_SESSION['rut']; ?></p>
+            <p><strong>Nombre: </strong><?php echo $_SESSION['nombre']; ?></p>
+            <form action="logout.php" method="POST">
+                <button type="submit" class="logout-btn">Salir</button>
+            </form>
+        </div>
     </div>
 </head>
 <body>
 <div class="container">
     <div class="main-content">
-        <form method="POST" action="">
-            <input type="text" name="rut" value="<?php echo $_SESSION['rut']; ?>" placeholder="RUT" required id="rut" readonly>
-            <input type="text" name="nombre" value="<?php echo $_SESSION['nombre']; ?>" placeholder="Nombre Completo" required id="nombre" readonly>
-            <select name="nro_serie" id="nro_serie" required>
-                <option value="">Selecciona un equipo</option>
-                <?php
-                    $sql = "SELECT id_equipo, nombre_equipo, nro_serie FROM equipos WHERE estado = 'disponible'";
-                    $equipos_result = $conn->query($sql);
-                    while ($equipo = $equipos_result->fetch_assoc()): ?>
-                    <option value="<?php echo $equipo['nro_serie']; ?>">
-                    <?php echo htmlspecialchars($equipo['nombre_equipo']) . " (Serie: " . htmlspecialchars($equipo['nro_serie']) . ")"; ?>
-                    </option>
-                <?php endwhile; ?>
-            </select><br><br>
-            <textarea name="motivo" placeholder="Motivo de ingreso (max 300 caracteres)" required></textarea>
-            <button type="submit" name="solicitar">Registrar Ingreso</button>
-        </form>
+    <form method="POST" action="">
+    <input type="text" name="rut" value="<?php echo $_SESSION['rut']; ?>" placeholder="RUT" required id="rut" readonly>
+    <input type="text" name="nombre" value="<?php echo $_SESSION['nombre']; ?>" placeholder="Nombre Completo" required id="nombre" readonly>
+    
+    <select name="nombre_equipo" id="nombre_equipo" onchange="cargarNumerosSerie()" required>
+        <option value="">Selecciona un equipo</option>
+        <?php
+            $sql = "SELECT DISTINCT nombre_equipo FROM equipos WHERE estado = 'disponible'";
+            $equipos_result = $conn->query($sql);
+            while ($equipo = $equipos_result->fetch_assoc()):
+        ?>
+            <option value="<?php echo $equipo['nombre_equipo']; ?>">
+                <?php echo htmlspecialchars($equipo['nombre_equipo']); ?>
+            </option>
+        <?php endwhile; ?>
+    </select><br><br>
+    
+    <select name="nro_serie" id="nro_serie" required>
+        <option value="">Selecciona un número de serie</option>
+    </select><br><br>
+
+    <textarea name="motivo" placeholder="Motivo de ingreso (max 300 caracteres)" required></textarea>
+    <button type="submit" name="solicitar">Registrar Ingreso</button>
+</form>
+
         <?php if (!empty($solicitudes_result)): ?>
             <h3>Solicitudes Realizadas</h3>
             <table>
@@ -194,7 +265,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['devolver'])) {
             <p id="motivo_rechazo"></p>
         </div>
     </div>
-
     <script>
         function showRechazoModal(motivo) {
             document.getElementById('motivo_rechazo').innerText = motivo;
@@ -208,6 +278,16 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['devolver'])) {
         window.onclick = function(event) {
             if (event.target == document.getElementById('rechazoModal')) {
                 closeRechazoModal();
+            }
+        }
+    </script>
+        <script>
+        function toggleAccountInfo() {
+            var accountInfo = document.getElementById('accountInfo');
+            if (accountInfo.style.display === "none") {
+                accountInfo.style.display = "block";
+            } else {
+                accountInfo.style.display = "none";
             }
         }
     </script>

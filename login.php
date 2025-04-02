@@ -69,9 +69,12 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['solicitar'])) {
     <div class="header">
         <img src="logo.png" alt="Logo">
         <div class="header-text">
-            <div class="main-title">Solicitudes Insumos TI</div>
+            <div class="main-title">Solicitudes de Prestamos Insumos</div>
             <div class="sub-title">Hospital Clínico Félix Bulnes</div>
         </div>
+        <form action="logout.php" method="POST">
+        <button type="submit" class="volver-btn">Volver</button>
+        </form>
     </div>
 </head>
 <body>

@@ -101,6 +101,24 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['eliminar'])) {
     }
 }
 
+if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['eliminar-usuario'])) {
+    $rut = $_POST['rut'];    
+    $sql_delete = "DELETE FROM usuarios WHERE rut = ?";
+
+    if ($stmt = $conn->prepare($sql_delete)) {
+        $stmt->bind_param("s", $rut);
+
+        if ($stmt->execute()) {
+        } else {
+            echo "Error al eliminar el usuario: " . $stmt->error;
+        }
+
+        $stmt->close();
+    } else {
+        echo "Error en la preparación de la consulta: " . $conn->error;
+    }
+}
+
 $sql = "SELECT id_equipo, nombre_equipo, nro_serie, estado FROM Equipos";
 $result = $conn->query($sql);
 $solicitudes_result = [];
@@ -110,7 +128,6 @@ if ($result->num_rows > 0) {
         $solicitudes_result[] = $row;
     }
 }
-
 
 $sql1 = "SELECT rut, nombre, correo FROM usuarios";
 $result1 = $conn->query($sql1);
@@ -130,11 +147,14 @@ if ($result1->num_rows > 0) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <div class="header">
-        <img src="logo.png" alt="Logo">
-        <div class="header-text">
-            <div class="main-title">Admin prestacion insumos</div>
-            <div class="sub-title">Hospital Clínico Félix Bulnes</div>
+    <img src="logo.png" alt="Logo">
+    <div class="header-text">
+        <div class="main-title">Administrador Prestamos Insumos</div>
+        <div class="sub-title">Hospital Clínico Félix Bulnes</div>
         </div>
+        <form action="logout.php" method="POST">
+            <button type="submit" class="logout-btn">Salir</button>
+        </form>
     </div>
 </head>
 <body>
@@ -146,14 +166,12 @@ if ($result1->num_rows > 0) {
             <input type="email" name="correo" placeholder="Correo" required id="correo">
             <button type="submit" name="ingresar">Registrar Usuario</button>
         </form>
-        
         <form method="POST" action="">
             <input type="text" name="nombre_equipo" placeholder="Nombre del Equipo" required id="nombre_equipo">
             <input type="text" name="nro_serie" placeholder="Número de Serie" required id="nro_serie">
             <input type="text" name="estado" placeholder="Estado (disponible | no disponible)" required id="estado">
             <button type="submit" name="insertar">Agregar Equipo</button>
         </form>
-
         <?php if (!empty($solicitudes_result)): ?>
             <h3>Insumos Disponibles</h3>
             <table>
@@ -202,7 +220,7 @@ if ($result1->num_rows > 0) {
                             <td>
                                 <form method="POST" action="">
                                     <input type="hidden" name="rut" value="<?php echo $solicitud1['rut']; ?>">
-                                    <button type="submit" name="eliminar_usuario" class="rechazar-btn-table">Eliminar</button>
+                                    <button type="submit" name="eliminar-usuario" class="rechazar-btn-table">Eliminar</button>
                                 </form>
                             </td>
                         </tr>
@@ -213,7 +231,6 @@ if ($result1->num_rows > 0) {
     </div>
 </body>
 </html>
-
 <?php
 $conn->close();
 ?>
