@@ -76,14 +76,14 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['solicitar'])) {
                     $mail = new PHPMailer(true);
                     try {
                         $mail->isSMTP();
-                        $mail->Host = 'smtp.gmail.com';
+                        $mail->Host = 'smtp.office365.com';
                         $mail->SMTPAuth = true;
-                        $mail->Username = 'valdiviaalejandro2001@gmail.com';
-                        $mail->Password = 'huyu fyqt jdll ayrh';
+                        $mail->Username = 'manuel.arrano@redsalud.gob.cl';
+                        $mail->Password = 'Z)230902217716ot';
                         $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
                         $mail->Port = 587;
 
-                        $mail->setFrom('valdiviaalejandro2001@gmail.com', 'Sistema de Solicitudes TI');
+                        $mail->setFrom('manuel.arrano@redsalud.gob.cl', 'Sistema de Solicitudes TI');
                         $mail->addAddress($correo);
 
                         $mail->Subject = "Nueva Solicitud Registrada";
@@ -148,10 +148,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['devolver'])) {
             <div class="main-title">Solicitar insumos de TI</div>
             <div class="sub-title">Hospital Clínico Félix Bulnes</div>
         </div>
-        <button id="cuenta-btn" onclick="toggleAccountInfo()">Sesion</button>
+        <button id="cuenta-btn" onclick="toggleAccountInfo()"><?php echo $_SESSION['nombre']; ?></button>
         <div id="accountInfo" style="display: none;">
             <p><strong>Usuario: </strong><?php echo $_SESSION['rut']; ?></p>
-            <p><strong>Nombre: </strong><?php echo $_SESSION['nombre']; ?></p>
             <form action="logout.php" method="POST">
                 <button type="submit" class="logout-btn">Salir</button>
             </form>
@@ -162,29 +161,22 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['devolver'])) {
 <div class="container">
     <div class="main-content">
     <form method="POST" action="">
-    <input type="text" name="rut" value="<?php echo $_SESSION['rut']; ?>" placeholder="RUT" required id="rut" readonly>
-    <input type="text" name="nombre" value="<?php echo $_SESSION['nombre']; ?>" placeholder="Nombre Completo" required id="nombre" readonly>
-    
-    <select name="nombre_equipo" id="nombre_equipo" onchange="cargarNumerosSerie()" required>
-        <option value="">Selecciona un equipo</option>
-        <?php
-            $sql = "SELECT DISTINCT nombre_equipo FROM equipos WHERE estado = 'disponible'";
-            $equipos_result = $conn->query($sql);
-            while ($equipo = $equipos_result->fetch_assoc()):
-        ?>
-            <option value="<?php echo $equipo['nombre_equipo']; ?>">
-                <?php echo htmlspecialchars($equipo['nombre_equipo']); ?>
-            </option>
-        <?php endwhile; ?>
-    </select><br><br>
-    
-    <select name="nro_serie" id="nro_serie" required>
-        <option value="">Selecciona un número de serie</option>
-    </select><br><br>
-
-    <textarea name="motivo" placeholder="Motivo de ingreso (max 300 caracteres)" required></textarea>
-    <button type="submit" name="solicitar">Registrar Ingreso</button>
-</form>
+            <input type="text" name="rut" value="<?php echo $_SESSION['rut']; ?>" placeholder="RUT" required id="rut" readonly>
+            <input type="text" name="nombre" value="<?php echo $_SESSION['nombre']; ?>" placeholder="Nombre Completo" required id="nombre" readonly>
+            <select name="nro_serie" id="nro_serie" required>
+                <option value="">Selecciona un equipo</option>
+                <?php
+                    $sql = "SELECT id_equipo, nombre_equipo, nro_serie FROM equipos WHERE estado = 'disponible'";
+                    $equipos_result = $conn->query($sql);
+                    while ($equipo = $equipos_result->fetch_assoc()): ?>
+                    <option value="<?php echo $equipo['nro_serie']; ?>">
+                    <?php echo htmlspecialchars($equipo['nombre_equipo']) . " (Serie: " . htmlspecialchars($equipo['nro_serie']) . ")"; ?>
+                    </option>
+                <?php endwhile; ?>
+            </select><br><br>
+            <textarea name="motivo" placeholder="Motivo de ingreso (max 300 caracteres)" required></textarea>
+            <button type="submit" name="solicitar">Registrar Ingreso</button>
+        </form>
 
         <?php if (!empty($solicitudes_result)): ?>
             <h3>Solicitudes Realizadas</h3>

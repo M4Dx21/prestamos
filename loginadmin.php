@@ -35,7 +35,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     <div class="header">
         <img src="logo.png" alt="Logo">
         <div class="header-text">
-            <div class="main-title">Ingreso Solicitudes Insumos TI</div>
+            <div class="main-title">Ingreso Admin solicitudes</div>
             <div class="sub-title">Hospital Clínico Félix Bulnes</div>
         </div>
         <form action="logout.php" method="POST">

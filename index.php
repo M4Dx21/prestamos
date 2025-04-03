@@ -16,7 +16,7 @@
     <div class="container">
         <h2>Selecciona tu usuario</h2>
         <form method="post">
-            <button type="submit" name="role" value="solicitante" class="role-button solicitante">Solicitante</button>
+            <button type="submit" name="role" value="solicitante" class="role-button solicitante">Solicitar</button>
             <button type="submit" name="role" value="admin" class="role-button admin">Administrador</button>
             <button type="submit" name="role" value="prestador" class="role-button prestador">Prestador</button>
         </form>

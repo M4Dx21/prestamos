@@ -1,4 +1,5 @@
 <?php
+session_start();
 include 'db.php';
 
 function validarRUT($rut) {
@@ -28,16 +29,6 @@ function validarRUT($rut) {
     return $dv_calculado == $rut_dv;
 }
 
-function formatearRUT($rut) {
-    $rut = str_replace(array(".", "-"), "", $rut);
-    $dv = strtoupper(substr($rut, -1));
-    $rut = substr($rut, 0, -1);
-    $rut = strrev(implode(".", str_split(strrev($rut), 3)));
-    return $rut . '-' . $dv;
-}
-
-session_start();
-
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['solicitar'])) {
     $rut = $_POST['rut'];
     $pass = $_POST['pass'];
@@ -58,8 +49,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['solicitar'])) {
         $error = "RUT no válido.";
     }
 }
-
 ?>
+
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -76,18 +67,81 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['solicitar'])) {
         <button type="submit" class="volver-btn">Volver</button>
         </form>
     </div>
+    <script>
+        function mostrarError(message) {
+            const errorMessage = document.getElementById("error-message");
+            errorMessage.textContent = message;
+            errorMessage.style.display = "block";
+        }
+
+        function validarRUTInput() {
+            const rutInput = document.getElementById("rut").value;
+            const rut = rutInput.replace(/\./g, "").replace("-", "");
+            
+            const regex = /^[0-9]{7,8}[0-9kK]{1}$/;
+            if (!regex.test(rut)) {
+                mostrarError("El RUT ingresado no tiene un formato válido.");
+                return false;
+            }
+
+            const rut_numeros = rut.slice(0, -1);
+            const rut_dv = rut.slice(-1).toUpperCase();
+            
+            let suma = 0;
+            let factor = 2;
+            for (let i = rut_numeros.length - 1; i >= 0; i--) {
+                suma += parseInt(rut_numeros.charAt(i)) * factor;
+                factor = (factor === 7) ? 2 : factor + 1;
+            }
+
+            const dv_calculado = 11 - (suma % 11);
+            let dv_final;
+            if (dv_calculado === 11) {
+                dv_final = '0';
+            } else if (dv_calculado === 10) {
+                dv_final = 'K';
+            } else {
+                dv_final = dv_calculado.toString();
+            }
+
+            if (dv_final !== rut_dv) {
+                mostrarError("El RUT ingresado es incorrecto.");
+                return false;
+            }
+            return true;
+        }
+
+        function validarFormulario(event) {
+            if (!validarRUTInput()) {
+                event.preventDefault();
+            }
+        }
+    </script>
 </head>
 <body>
     <div class="container">
         <h2>Iniciar sesión</h2>
+
         <?php if (isset($error)): ?>
             <div class="error-message"><?php echo $error; ?></div>
         <?php endif; ?>
+
         <form method="POST" action="">
             <input type="text" name="rut" placeholder="RUT" required id="rut" onblur="validarRUTInput()">
             <input type="password" name="pass" placeholder="Contraseña" required>
             <button type="submit" name="solicitar">INGRESAR</button>
         </form>
     </div>
+
+    <style>
+        .error-message {
+            color: red;
+            background-color: #f8d7da;
+            border: 1px solid #f5c6cb;
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 15px;
+        }
+    </style>
 </body>
 </html>

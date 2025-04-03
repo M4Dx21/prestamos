@@ -1,6 +1,11 @@
 <?php
 include 'db.php';
+session_start();
 
+if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'admin') {
+    header("Location: index.php");
+    exit();
+}
 $sql = "SELECT id_equipo, nombre_equipo, nro_serie FROM Equipos";
 $result = $conn->query($sql);
 
@@ -48,6 +53,13 @@ function formatearRUT($rut) {
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['ingresar'])) {
     $rut = $_POST['rut'];
+    
+    // Validar RUT en PHP
+    if (!validarRUT($rut)) {
+        echo "El RUT ingresado no es válido.";
+        exit();
+    }
+
     $nombre = $_POST['nombre'];
     $pass = $_POST['pass'];
     $rol = 'prestamista';
@@ -90,7 +102,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['eliminar'])) {
         $stmt->bind_param("i", $nro_serie);
 
         if ($stmt->execute()) {
-            echo "El equipo ha sido eliminado correctamente.";
         } else {
             echo "Error al eliminar el equipo: " . $stmt->error;
         }
@@ -156,6 +167,42 @@ if ($result1->num_rows > 0) {
             <button type="submit" class="logout-btn">Salir</button>
         </form>
     </div>
+    <script>
+        function validarRUTInput() {
+            var rut = document.getElementById('rut').value;
+            var valid = validarRUT(rut);
+            
+            if (!valid) {
+            }
+        }
+
+        function validarRUT(rut) {
+            rut = rut.replace(/[.-]/g, "");
+            var regex = /^[0-9]{7,8}[0-9kK]{1}$/;
+            if (!regex.test(rut)) {
+                return false;
+            }
+
+            var rut_numeros = rut.slice(0, -1);
+            var rut_dv = rut.slice(-1).toUpperCase();
+
+            var suma = 0;
+            var factor = 2;
+            for (var i = rut_numeros.length - 1; i >= 0; i--) {
+                suma += rut_numeros.charAt(i) * factor;
+                factor = (factor == 7) ? 2 : factor + 1;
+            }
+
+            var dv_calculado = 11 - (suma % 11);
+            if (dv_calculado == 11) {
+                dv_calculado = '0';
+            } else if (dv_calculado == 10) {
+                dv_calculado = 'K';
+            }
+
+            return dv_calculado == rut_dv;
+        }
+    </script>
 </head>
 <body>
     <div class="container">

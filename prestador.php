@@ -110,10 +110,9 @@ $sql_check .= " ORDER BY estado = 'en proceso' DESC, fecha_solicitud ASC";
             <div class="main-title">Solicitudes insumos TI</div>
             <div class="sub-title">Hospital Clínico Félix Bulnes</div>
         </div>
-        <button id="cuenta-btn" onclick="toggleAccountInfo()">Sesion</button>
+        <button id="cuenta-btn" onclick="toggleAccountInfo()"><?php echo $_SESSION['nombre']; ?></button>
         <div id="accountInfo" style="display: none;">
             <p><strong>Usuario: </strong><?php echo $_SESSION['rut']; ?></p>
-            <p><strong>Nombre: </strong><?php echo $_SESSION['nombre']; ?></p>
             <form action="logout.php" method="POST">
                 <button type="submit" class="logout-btn">Salir</button>
             </form>
