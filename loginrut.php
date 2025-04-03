@@ -1,5 +1,6 @@
 <?php
 session_start();
+include 'db.php';
 
 function validarRUT($rut) {
     $rut = str_replace(array(".", "-"), "", $rut);
@@ -28,22 +29,27 @@ function validarRUT($rut) {
     return $dv_calculado == $rut_dv;
 }
 
-if (!isset($_SESSION['role'])) {
-    header("Location: index.php");
-    exit();
-}
+if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['solicitar'])) {
+    $rut = $_POST['rut'];
+    $pass = $_POST['pass'];
 
-if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-    $_SESSION['nombre'] = $_POST['nombre'];
-    $_SESSION['rut'] = $_POST['rut'];
-    if ($_SESSION['role'] == 'prestador') {
-        header("Location: prestador.php");
-    } elseif ($_SESSION['role'] == 'solicitante') {
-        header("Location: solicitud.php");
+    if (validarRUT($rut)) {
+        $sql = "SELECT * FROM usuarios WHERE rut = '$rut' AND pass = '$pass' AND rol ='solicitante' ";
+        $result = $conn->query($sql);
+
+        if ($result->num_rows > 0) {
+            $_SESSION['rut'] = $rut;
+            $_SESSION['nombre'] = $result->fetch_assoc()['nombre'];
+            header("Location: solicitud.php");
+            exit();
+        } else {
+            $error = "Credenciales incorrectas. Intenta nuevamente.";
+        }
+    } else {
+        $error = "RUT no válido.";
     }
 }
 ?>
-
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -112,15 +118,17 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     </script>
 </head>
 <body>
-    <div class="container">
-        <h2>Ingresa tu Nombre y RUT</h2>
-        
-        <div id="error-message" class="error-message" style="display: none;"></div>
+<div class="container">
+        <h2>Iniciar sesión</h2>
 
-        <form method="POST" onsubmit="validarFormulario(event)">
-            <input type="text" name="nombre" placeholder="Nombre Completo" required>
-            <input type="text" name="rut" id="rut" placeholder="RUT" required onblur="validarRUTInput()">
-            <button type="submit">Continuar</button>
+        <?php if (isset($error)): ?>
+            <div class="error-message"><?php echo $error; ?></div>
+        <?php endif; ?>
+
+        <form method="POST" action="">
+            <input type="text" name="rut" placeholder="RUT" required id="rut" onblur="validarRUTInput()">
+            <input type="password" name="pass" placeholder="Contraseña" required>
+            <button type="submit" name="solicitar">INGRESAR</button>
         </form>
     </div>
 
