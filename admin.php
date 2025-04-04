@@ -6,6 +6,7 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'admin') {
     header("Location: index.php");
     exit();
 }
+
 $sql = "SELECT id_equipo, nombre_equipo, nro_serie FROM Equipos";
 $result = $conn->query($sql);
 
@@ -54,7 +55,6 @@ function formatearRUT($rut) {
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['ingresar'])) {
     $rut = $_POST['rut'];
     
-    // Validar RUT en PHP
     if (!validarRUT($rut)) {
         echo "El RUT ingresado no es válido.";
         exit();
@@ -62,7 +62,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['ingresar'])) {
 
     $nombre = $_POST['nombre'];
     $pass = $_POST['pass'];
-    $rol = 'prestamista';
+    $rol = $_POST['rol'];
     $correo = $_POST['correo'];
 
     $sql_insert = "INSERT INTO usuarios (rut, nombre, pass, rol, correo) 
@@ -140,13 +140,23 @@ if ($result->num_rows > 0) {
     }
 }
 
-$sql1 = "SELECT rut, nombre, correo FROM usuarios";
+$sql1 = "SELECT rut, nombre, correo FROM usuarios WHERE rol = 'prestamista'";
 $result1 = $conn->query($sql1);
 
 $solicitudes_result1 = [];
 if ($result1->num_rows > 0) {
     while ($row = $result1->fetch_assoc()) {
         $solicitudes_result1[] = $row;
+    }
+}
+
+$sql2 = "SELECT rut, nombre, correo FROM usuarios WHERE rol = 'solicitante'";
+$result2 = $conn->query($sql2);
+    
+$solicitudes_result2 = [];
+if ($result2->num_rows > 0) {
+    while ($row = $result2->fetch_assoc()) {
+        $solicitudes_result2[] = $row;
     }
 }
 
@@ -158,50 +168,30 @@ if ($result1->num_rows > 0) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <div class="header">
-    <img src="logo.png" alt="Logo">
-    <div class="header-text">
-        <div class="main-title">Administrador Prestamos Insumos</div>
-        <div class="sub-title">Hospital Clínico Félix Bulnes</div>
+        <img src="logo.png" alt="Logo">
+        <div class="header-text">
+            <div class="main-title">Administrador Prestamos Insumos</div>
+            <div class="sub-title">Hospital Clínico Félix Bulnes</div>
         </div>
         <form action="logout.php" method="POST">
             <button type="submit" class="logout-btn">Salir</button>
         </form>
     </div>
     <script>
-        function validarRUTInput() {
-            var rut = document.getElementById('rut').value;
-            var valid = validarRUT(rut);
+        function toggleCorreo() {
+            var rol = document.getElementById('rol').value;
+            var correoInput = document.getElementById('correo');
             
-            if (!valid) {
+            if (rol === 'solicitante') {
+                correoInput.disabled = true;
+            } else {
+                correoInput.disabled = false;
             }
         }
 
-        function validarRUT(rut) {
-            rut = rut.replace(/[.-]/g, "");
-            var regex = /^[0-9]{7,8}[0-9kK]{1}$/;
-            if (!regex.test(rut)) {
-                return false;
-            }
-
-            var rut_numeros = rut.slice(0, -1);
-            var rut_dv = rut.slice(-1).toUpperCase();
-
-            var suma = 0;
-            var factor = 2;
-            for (var i = rut_numeros.length - 1; i >= 0; i--) {
-                suma += rut_numeros.charAt(i) * factor;
-                factor = (factor == 7) ? 2 : factor + 1;
-            }
-
-            var dv_calculado = 11 - (suma % 11);
-            if (dv_calculado == 11) {
-                dv_calculado = '0';
-            } else if (dv_calculado == 10) {
-                dv_calculado = 'K';
-            }
-
-            return dv_calculado == rut_dv;
-        }
+        window.onload = function() {
+            toggleCorreo();
+        };
     </script>
 </head>
 <body>
@@ -210,15 +200,23 @@ if ($result1->num_rows > 0) {
             <input type="text" name="rut" placeholder="RUT" required id="rut" onblur="validarRUTInput()">
             <input type="text" name="nombre" placeholder="Nombre" required id="nombre">
             <input type="password" name="pass" placeholder="Contraseña" required id="pass">
+
+            <select name="rol" required id="rol" onchange="toggleCorreo()">
+                <option value="prestamista">Prestamista</option>
+                <option value="solicitante">Solicitante</option>
+            </select>
+
             <input type="email" name="correo" placeholder="Correo" required id="correo">
             <button type="submit" name="ingresar">Registrar Usuario</button>
         </form>
+        
         <form method="POST" action="">
             <input type="text" name="nombre_equipo" placeholder="Nombre del Equipo" required id="nombre_equipo">
             <input type="text" name="nro_serie" placeholder="Número de Serie" required id="nro_serie">
             <input type="text" name="estado" placeholder="Estado (disponible | no disponible)" required id="estado">
             <button type="submit" name="insertar">Agregar Equipo</button>
         </form>
+
         <?php if (!empty($solicitudes_result)): ?>
             <h3>Insumos Disponibles</h3>
             <table>
@@ -247,8 +245,9 @@ if ($result1->num_rows > 0) {
                 </tbody>
             </table>
         <?php endif; ?>
+
         <?php if (!empty($solicitudes_result1)): ?>
-            <h3>Usuarios Registrados</h3>
+            <h3>Prestadores:</h3>
             <table>
                 <thead>
                     <tr>
@@ -275,9 +274,40 @@ if ($result1->num_rows > 0) {
                 </tbody>
             </table>
         <?php endif; ?>
+
+        <?php if (!empty($solicitudes_result2)): ?>
+            <h3>Solicitantes:</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Nombre</th>
+                        <th>RUT</th>
+                        <th>Correo</th>
+                        <th>Eliminar</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php foreach ($solicitudes_result2 as $solicitud2): ?>
+                        <tr>
+                            <td><?php echo htmlspecialchars($solicitud2['nombre']); ?></td>
+                            <td><?php echo htmlspecialchars($solicitud2['rut']); ?></td>
+                            <td><?php echo htmlspecialchars($solicitud2['correo']); ?></td>
+                            <td>
+                                <form method="POST" action="">
+                                    <input type="hidden" name="rut" value="<?php echo $solicitud2['rut']; ?>">
+                                    <button type="submit" name="eliminar-usuario" class="rechazar-btn-table">Eliminar</button>
+                                </form>
+                            </td>
+                        </tr>
+                    <?php endforeach; ?>
+                </tbody>
+            </table>
+        <?php endif; ?>
+
     </div>
 </body>
 </html>
+
 <?php
 $conn->close();
 ?>

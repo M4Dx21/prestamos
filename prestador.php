@@ -90,6 +90,23 @@ if (isset($_POST['limpiar_filtros'])) {
     exit();
 }
 
+if (isset($_GET['query'])) {
+    $query = $_GET['query'];
+
+    $query = $conn->real_escape_string($query);
+
+    $sql = "SELECT nombre_solicitante FROM solicitudes WHERE nombre_solicitante LIKE '%$query%' LIMIT 10";
+    $result = $conn->query($sql);
+
+    $suggestions = [];
+    if ($result->num_rows > 0) {
+        while ($row = $result->fetch_assoc()) {
+            $suggestions[] = $row['nombre_solicitante'];
+        }
+    }
+    echo json_encode($suggestions);
+}
+
 $sql_check = "SELECT id, nombre_solicitante, rut, fecha_solicitud, motivo_solicitud, fecha_entrega, nro_serie_equipo, estado FROM solicitudes WHERE 1";
 
 if ($resolucion_filtro) {
@@ -123,6 +140,11 @@ $sql_check .= " ORDER BY estado = 'en proceso' DESC, fecha_solicitud ASC";
     <div class="container">
         <div class="filters">
             <form method="POST" action="">
+                <label for="nombre_usuario">Nombre del Solicitante:</label>
+                <input type="text" id="nombre_usuario" name="nombre_usuario" autocomplete="off" placeholder="Escribe el nombre del solicitante...">
+                <ul id="suggestions" style="display: none; list-style-type: none; padding-left: 0;">
+                    <!-- Las sugerencias aparecerán aquí -->
+                </ul>
                 <label for="resolucion">Filtrar por:</label>
                 <select name="resolucion" id="resolucion">
                     <option value="">--Seleccionar--</option>
@@ -194,6 +216,18 @@ $sql_check .= " ORDER BY estado = 'en proceso' DESC, fecha_solicitud ASC";
                                         <input type="text" name="motivo_rechazo" placeholder="Motivo de rechazo" required>
                                         <button type="submit" name="rechazar" class="rechazar-btn-table">Rechazar</button>
                                     </form>
+                                <?php elseif ($solicitud['estado'] == 'rechazada'): ?>
+                                    <div class="rechazo-motivo"><?php 
+                                            $sql_motivo_rechazo = "SELECT motivo_rechazo FROM pedicion WHERE id_solicitud = ".$solicitud['id']." AND estado = 'rechazada' LIMIT 1";
+                                            $result_motivo = $conn->query($sql_motivo_rechazo);
+                                            if ($result_motivo->num_rows > 0) {
+                                                $row_motivo = $result_motivo->fetch_assoc();
+                                                echo htmlspecialchars($row_motivo['motivo_rechazo']);
+                                            } else {
+                                                echo "Motivo no disponible.";
+                                            }
+                                        ?>
+                                    </div>
                                 <?php endif; ?>
                             </td>
                         </tr>
@@ -217,6 +251,7 @@ $sql_check .= " ORDER BY estado = 'en proceso' DESC, fecha_solicitud ASC";
     </script>
 </body>
 </html>
+
 <?php
 $conn->close();
 ?>
