@@ -88,7 +88,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['solicitar'])) {
                         $mail->setFrom('manuel.arrano@redsalud.gob.cl', 'Sistema de Solicitudes TI');
                         $mail->addAddress($correo);
 
-                        $mail->Subject = "Nueva Solicitud Registrada";
+                        $mail->Subject = "Nueva solicitud de equipo TI";
                         $mail->Body    = "Se ha registrado una nueva solicitud de equipo. Detalles:\n\n";
                         $mail->Body   .= "Solicitante: $nombre\n";
                         $mail->Body   .= "RUT: $rut\n";
@@ -102,7 +102,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['solicitar'])) {
                         echo "Error al enviar el correo a: $correo. Error: {$mail->ErrorInfo}\n";
                     }
                 }
-                
+
             } else {
                 echo "No se encontraron usuarios con correo registrado.";
             }

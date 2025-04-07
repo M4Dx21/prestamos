@@ -328,6 +328,13 @@ td form {
    font-weight: bold;
 }
 
+.error-message {
+   color: red;
+   font-size: 12px;
+   margin-top: 5px;
+   display: none;
+}
+
 .prestador {
    background-color: #0056b3;
    border-color: #0a56a7;

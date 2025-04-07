@@ -73,27 +73,45 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['ingresar'])) {
         exit();
     }
 
-    if (rutExists($rut, $conn)) {
-        echo "<script>alert('El RUT ingresado ya está registrado.');</script>";
-        exit();
-    }
-
     $nombre = $_POST['nombre'];
     $pass = $_POST['pass'];
     $rol = $_POST['rol'];
     $correo = $_POST['correo'];
 
-    $sql_insert = "INSERT INTO usuarios (rut, nombre, pass, rol, correo) 
-                   VALUES ('$rut', '$nombre', '$pass', '$rol', '$correo')";
+    if (rutExists($rut, $conn)) {
+        $sql_update = "UPDATE usuarios 
+                       SET nombre = ?, pass = ?, rol = ?, correo = ?
+                       WHERE rut = ?";
 
-    if ($conn->query($sql_insert) === TRUE) {
-        echo "Usuario registrado correctamente.";
-        header("Location: ".$_SERVER['PHP_SELF']);
-        exit();
+        if ($stmt = $conn->prepare($sql_update)) {
+            $stmt->bind_param("sssss", $nombre, $pass, $rol, $correo, $rut);
+
+            if ($stmt->execute()) {
+                echo "Usuario actualizado correctamente.";
+                header("Location: ".$_SERVER['PHP_SELF']);
+                exit();
+            } else {
+                echo "Error: " . $sql_update . "<br>" . $conn->error;
+            }
+
+            $stmt->close();
+        } else {
+            echo "Error en la preparación de la consulta: " . $conn->error;
+        }
     } else {
-        echo "Error: " . $sql_insert . "<br>" . $conn->error;
+        $sql_insert = "INSERT INTO usuarios (rut, nombre, pass, rol, correo) 
+                       VALUES ('$rut', '$nombre', '$pass', '$rol', '$correo')";
+
+        if ($conn->query($sql_insert) === TRUE) {
+            echo "Usuario registrado correctamente.";
+            header("Location: ".$_SERVER['PHP_SELF']);
+            exit();
+        } else {
+            echo "Error: " . $sql_insert . "<br>" . $conn->error;
+        }
     }
 }
+
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['insertar'])) {
     $nro_serie = $_POST['nro_serie'];
@@ -207,9 +225,19 @@ if ($result2->num_rows > 0) {
             
             if (rol === 'solicitante') {
                 correoInput.disabled = true;
+            }
+            else if (rol === 'admin') {
+                correoInput.disabled = true;
             } else {
                 correoInput.disabled = false;
             }
+        }
+
+        function limpiarRut() {
+            const rutInput = document.getElementById("rut");
+            let rut = rutInput.value;
+            rut = rut.replace(/\./g, "").replace("-", "");
+            rutInput.value = rut;
         }
 
         window.onload = function() {
@@ -220,13 +248,14 @@ if ($result2->num_rows > 0) {
 <body>
     <div class="container">
         <form method="POST" action="">
-            <input type="text" name="rut" placeholder="RUT" required id="rut" onblur="validarRUTInput()">
+            <input type="text" name="rut" placeholder="RUT" required id="rut" onblur="validarRUTInput()" oninput="limpiarRut()">
             <input type="text" name="nombre" placeholder="Nombre" required id="nombre">
             <input type="password" name="pass" placeholder="Contraseña" required id="pass">
 
             <select name="rol" required id="rol" onchange="toggleCorreo()">
                 <option value="prestamista">Prestamista</option>
                 <option value="solicitante">Solicitante</option>
+                <option value="admin">Admin</option>
             </select>
 
             <input type="email" name="correo" placeholder="Correo" required id="correo">

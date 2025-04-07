@@ -65,7 +65,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['solicitar'])) {
     <div class="header">
         <img src="logo.png" alt="Logo">
         <div class="header-text">
-            <div class="main-title">Solicitudes de Prestamos Insumos</div>
+            <div class="main-title">Ingreso a Solicitudes de Prestamos de Insumos</div>
             <div class="sub-title">Hospital Clínico Félix Bulnes</div>
         </div>
         <form action="logout.php" method="POST">
@@ -116,6 +116,13 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['solicitar'])) {
             return true;
         }
 
+        function limpiarRut() {
+            const rutInput = document.getElementById("rut");
+            let rut = rutInput.value;
+            rut = rut.replace(/\./g, "").replace("-", "");
+            rutInput.value = rut;
+        }
+        
         function validarFormulario(event) {
             if (!validarRUTInput()) {
                 event.preventDefault();
@@ -132,7 +139,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['solicitar'])) {
         <?php endif; ?>
 
         <form method="POST" action="" onsubmit="validarFormulario(event)">
-            <input type="text" name="rut" placeholder="RUT" required id="rut" oninput="formatearRUT()" onblur="validarRUTInput()">
+            <input type="text" name="rut" placeholder="RUT" required id="rut" onblur="validarRUTInput()" oninput="limpiarRut()">
             <input type="password" name="pass" placeholder="Contraseña" required>
             <button type="submit" name="solicitar">INGRESAR</button>
         </form>
