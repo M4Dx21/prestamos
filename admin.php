@@ -52,11 +52,29 @@ function formatearRUT($rut) {
     return $rut . '-' . $dv;
 }
 
+function rutExists($rut, $conn) {
+    $sql_check = "SELECT 1 FROM usuarios WHERE rut = ?";
+    if ($stmt = $conn->prepare($sql_check)) {
+        $stmt->bind_param("s", $rut);
+        $stmt->execute();
+        $stmt->store_result();
+        return $stmt->num_rows > 0;
+    } else {
+        echo "Error en la preparación de la consulta: " . $conn->error;
+        return false;
+    }
+}
+
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['ingresar'])) {
     $rut = $_POST['rut'];
-    
+
     if (!validarRUT($rut)) {
         echo "El RUT ingresado no es válido.";
+        exit();
+    }
+
+    if (rutExists($rut, $conn)) {
+        echo "<script>alert('El RUT ingresado ya está registrado.');</script>";
         exit();
     }
 
@@ -94,16 +112,20 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['insertar'])) {
     }
 }
 
-if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['eliminar'])) {
+if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['cambiar_estado'])) {
     $nro_serie = $_POST['nro_serie'];    
-    $sql_delete = "DELETE FROM equipos WHERE nro_serie = ?";
+    $estado_actual = $_POST['estado_actual'];
 
-    if ($stmt = $conn->prepare($sql_delete)) {
-        $stmt->bind_param("i", $nro_serie);
+    $nuevo_estado = ($estado_actual == 'disponible') ? 'no disponible' : 'disponible';
+
+    $sql_update = "UPDATE equipos SET estado = ? WHERE nro_serie = ?";
+
+    if ($stmt = $conn->prepare($sql_update)) {
+        $stmt->bind_param("si", $nuevo_estado, $nro_serie);
 
         if ($stmt->execute()) {
         } else {
-            echo "Error al eliminar el equipo: " . $stmt->error;
+            echo "Error al actualizar el estado del equipo: " . $stmt->error;
         }
 
         $stmt->close();
@@ -111,6 +133,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['eliminar'])) {
         echo "Error en la preparación de la consulta: " . $conn->error;
     }
 }
+
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['eliminar-usuario'])) {
     $rut = $_POST['rut'];    
@@ -213,19 +236,24 @@ if ($result2->num_rows > 0) {
         <form method="POST" action="">
             <input type="text" name="nombre_equipo" placeholder="Nombre del Equipo" required id="nombre_equipo">
             <input type="text" name="nro_serie" placeholder="Número de Serie" required id="nro_serie">
-            <input type="text" name="estado" placeholder="Estado (disponible | no disponible)" required id="estado">
+            
+            <select name="estado" required id="estado">
+                <option value="disponible">Disponible</option>
+                <option value="no disponible">No Disponible</option>
+            </select>
+
             <button type="submit" name="insertar">Agregar Equipo</button>
         </form>
 
         <?php if (!empty($solicitudes_result)): ?>
             <h3>Insumos Disponibles</h3>
-            <table>
+            <table class="tabla-admin">
                 <thead>
                     <tr>
                         <th>Equipos</th>
                         <th>Nro° Serie</th>
                         <th>Estado</th>
-                        <th>Eliminar</th>
+                        <th>Actualizar Estado</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -237,7 +265,10 @@ if ($result2->num_rows > 0) {
                             <td>
                                 <form method="POST" style="display: inline;">
                                     <input type="hidden" name="nro_serie" value="<?php echo $solicitud['nro_serie']; ?>">
-                                    <button type="submit" name="eliminar" class="rechazar-btn-table">Eliminar</button>
+                                    <input type="hidden" name="estado_actual" value="<?php echo $solicitud['estado']; ?>">
+                                    <button type="submit" name="cambiar_estado" class="btn-table">
+                                        Cambiar a <?php echo ($solicitud['estado'] == 'disponible') ? 'No Disponible' : 'Disponible'; ?>
+                                    </button>
                                 </form>
                             </td>
                         </tr>

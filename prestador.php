@@ -8,11 +8,17 @@ if (!isset($_SESSION['rut'])) {
 }
 
 $resolucion_filtro = isset($_POST['resolucion']) ? $_POST['resolucion'] : '';
+$nombre_usuario_filtro = isset($_POST['nombre_usuario']) ? $_POST['nombre_usuario'] : ''; // Capturamos el valor del nombre solicitante
 
 $sql_check = "SELECT id, nombre_solicitante, rut, fecha_solicitud, motivo_solicitud, fecha_entrega, nro_serie_equipo, estado FROM solicitudes WHERE 1";
 
 if ($resolucion_filtro) {
     $sql_check .= " AND estado = '$resolucion_filtro'";
+}
+
+if ($nombre_usuario_filtro) {
+    $nombre_usuario_filtro = $conn->real_escape_string($nombre_usuario_filtro); // Sanitizamos el input
+    $sql_check .= " AND nombre_solicitante LIKE '%$nombre_usuario_filtro%'";
 }
 
 $sql_check .= " ORDER BY estado = 'en proceso' DESC, fecha_solicitud ASC";
@@ -86,6 +92,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["rechazar"])) {
 
 if (isset($_POST['limpiar_filtros'])) {
     $resolucion_filtro = '';
+    $nombre_usuario_filtro = '';
     header("Location: ".$_SERVER['PHP_SELF']);
     exit();
 }
@@ -112,6 +119,12 @@ $sql_check = "SELECT id, nombre_solicitante, rut, fecha_solicitud, motivo_solici
 if ($resolucion_filtro) {
     $sql_check .= " AND estado = '$resolucion_filtro'";
 }
+
+if ($nombre_usuario_filtro) {
+    $nombre_usuario_filtro = $conn->real_escape_string($nombre_usuario_filtro); // Sanitizamos el input
+    $sql_check .= " AND nombre_solicitante LIKE '%$nombre_usuario_filtro%'";
+}
+
 $sql_check .= " ORDER BY estado = 'en proceso' DESC, fecha_solicitud ASC";
 
 ?>
@@ -141,9 +154,8 @@ $sql_check .= " ORDER BY estado = 'en proceso' DESC, fecha_solicitud ASC";
         <div class="filters">
             <form method="POST" action="">
                 <label for="nombre_usuario">Nombre del Solicitante:</label>
-                <input type="text" id="nombre_usuario" name="nombre_usuario" autocomplete="off" placeholder="Escribe el nombre del solicitante...">
+                <input type="text" id="nombre_usuario" name="nombre_usuario" autocomplete="off" placeholder="Escribe el nombre del solicitante..." value="<?php echo htmlspecialchars($nombre_usuario_filtro); ?>">
                 <ul id="suggestions" style="display: none; list-style-type: none; padding-left: 0;">
-                    <!-- Las sugerencias aparecerán aquí -->
                 </ul>
                 <label for="resolucion">Filtrar por:</label>
                 <select name="resolucion" id="resolucion">
@@ -174,18 +186,20 @@ $sql_check .= " ORDER BY estado = 'en proceso' DESC, fecha_solicitud ASC";
                 <tbody>
                     <?php foreach ($solicitudes_result as $solicitud): ?>
                         <?php 
-                            $estado_class = '';
-                            switch ($solicitud['estado']) {
-                                case 'en proceso':
-                                    $estado_class = 'estado-en-proceso';
-                                    break;
-                                case 'terminada':
-                                    $estado_class = 'estado-aceptada';
-                                    break;
-                                case 'aceptada':
-                                    $estado_class = 'estado-rechazada';
-                                    break;
-                            }
+                        $estado_class = '';
+                        switch ($solicitud['estado']) {
+                            case 'en proceso':
+                                $estado_class = 'estado-en-proceso';
+                                break;
+                            case 'terminada':
+                                $estado_class = 'estado-terminada';
+                                break;
+                            case 'aceptada':
+                                $estado_class = 'estado-aceptada';
+                                break;
+                                case 'rechazada';
+                                $estado_class = 'estado-rechazada';
+                        }
                         ?>
                         <tr class="<?php echo $estado_class; ?>">
                             <td><?php echo htmlspecialchars($solicitud['rut']); ?></td>

@@ -11,6 +11,8 @@ function getEstadoClass($estado) {
             return 'estado-rechazada';
         case 'aceptada':
             return 'estado-aceptada';
+            case 'terminada';
+            return 'estado-terminada';
         default:
             return 'estado-en-proceso';
     }
@@ -100,6 +102,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['solicitar'])) {
                         echo "Error al enviar el correo a: $correo. Error: {$mail->ErrorInfo}\n";
                     }
                 }
+                
             } else {
                 echo "No se encontraron usuarios con correo registrado.";
             }
@@ -177,17 +180,16 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['devolver'])) {
             <textarea name="motivo" placeholder="Motivo de ingreso (max 300 caracteres)" required></textarea>
             <button type="submit" name="solicitar">Registrar Ingreso</button>
         </form>
-
         <?php if (!empty($solicitudes_result)): ?>
             <h3>Solicitudes Realizadas</h3>
             <table>
                 <thead>
                     <tr>
                         <th>Nombre</th>
-                        <th>Equipo Solicitado</th>
+                        <th>Equipo</th>
                         <th>Motivo</th>
-                        <th>Fecha Solicitud</th>
-                        <th>Estado Solicitud</th>
+                        <th>Fecha</th>
+                        <th>Estado</th>
                         <th>Acciones</th>
                     </tr>
                 </thead>
@@ -200,13 +202,15 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['devolver'])) {
                                 $estado_class = 'estado-en-proceso';
                                 break;
                             case 'terminada':
-                                $estado_class = 'estado-aceptada';
+                                $estado_class = 'estado-terminada';
                                 break;
                             case 'aceptada':
-                                $estado_class = 'estado-rechazada';
+                                $estado_class = 'estado-aceptada';
                                 break;
+                                case 'rechazada';
+                                $estado_class = 'estado-rechazada';
                         }
-                                    ?>
+                        ?>
                         <tr class="<?php echo $estado_class; ?>">
                             <td><?php echo htmlspecialchars($solicitud['nombre_solicitante']); ?></td>
                             <td><?php 
@@ -272,6 +276,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['devolver'])) {
                 closeRechazoModal();
             }
         }
+        
     </script>
         <script>
         function toggleAccountInfo() {
@@ -282,7 +287,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['devolver'])) {
                 accountInfo.style.display = "none";
             }
         }
-    </script>
+        </script>
 </body>
 </html>
 <?php

@@ -2,6 +2,11 @@
 session_start();
 include 'db.php';
 
+function formatearRUT($rut) {
+    $rut = str_replace(array(".", "-"), "", $rut);
+    return $rut;
+}
+
 function validarRUT($rut) {
     $rut = str_replace(array(".", "-"), "", $rut);
     
@@ -76,7 +81,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['solicitar'])) {
 
         function validarRUTInput() {
             const rutInput = document.getElementById("rut").value;
-            const rut = rutInput.replace(/\./g, "").replace("-", "");
+            let rut = rutInput.replace(/\./g, "").replace("-", "");
             
             const regex = /^[0-9]{7,8}[0-9kK]{1}$/;
             if (!regex.test(rut)) {
@@ -90,7 +95,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['solicitar'])) {
             let suma = 0;
             let factor = 2;
             for (let i = rut_numeros.length - 1; i >= 0; i--) {
-                suma += parseInt(rut_numeros.charAt(i)) * factor;
+                suma += parseInt(rut.charAt(i)) * factor;
                 factor = (factor === 7) ? 2 : factor + 1;
             }
 
@@ -126,8 +131,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['solicitar'])) {
             <div class="error-message"><?php echo $error; ?></div>
         <?php endif; ?>
 
-        <form method="POST" action="">
-            <input type="text" name="rut" placeholder="RUT" required id="rut" onblur="validarRUTInput()">
+        <form method="POST" action="" onsubmit="validarFormulario(event)">
+            <input type="text" name="rut" placeholder="RUT" required id="rut" oninput="formatearRUT()" onblur="validarRUTInput()">
             <input type="password" name="pass" placeholder="Contraseña" required>
             <button type="submit" name="solicitar">INGRESAR</button>
         </form>

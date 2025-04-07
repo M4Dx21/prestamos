@@ -33,6 +33,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['solicitar'])) {
     $rut = $_POST['rut'];
     $pass = $_POST['pass'];
 
+
+    $rut = str_replace(array(".", "-"), "", $rut);
+
     if (validarRUT($rut)) {
         $sql = "SELECT * FROM usuarios WHERE rut = '$rut' AND pass = '$pass' AND rol ='solicitante' ";
         $result = $conn->query($sql);
@@ -50,10 +53,11 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['solicitar'])) {
     }
 }
 ?>
+
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="styles.css">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <div class="header">
@@ -63,7 +67,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['solicitar'])) {
             <div class="sub-title">Hospital Clínico Félix Bulnes</div>
         </div>
         <form action="logout.php" method="POST">
-        <button type="submit" class="volver-btn">Volver</button>
+            <button type="submit" class="volver-btn">Volver</button>
         </form>
     </div>
     <script>
@@ -75,7 +79,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['solicitar'])) {
 
         function validarRUTInput() {
             const rutInput = document.getElementById("rut").value;
-            const rut = rutInput.replace(/\./g, "").replace("-", "");
+            let rut = rutInput.replace(/\./g, "").replace("-", "");
             
             const regex = /^[0-9]{7,8}[0-9kK]{1}$/;
             if (!regex.test(rut)) {
@@ -110,6 +114,13 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['solicitar'])) {
             return true;
         }
 
+        function limpiarRut() {
+            const rutInput = document.getElementById("rut");
+            let rut = rutInput.value;
+            rut = rut.replace(/\./g, "").replace("-", "");
+            rutInput.value = rut;
+        }
+
         function validarFormulario(event) {
             if (!validarRUTInput()) {
                 event.preventDefault();
@@ -118,15 +129,15 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['solicitar'])) {
     </script>
 </head>
 <body>
-<div class="container">
+    <div class="container">
         <h2>Iniciar sesión</h2>
 
         <?php if (isset($error)): ?>
             <div class="error-message"><?php echo $error; ?></div>
         <?php endif; ?>
 
-        <form method="POST" action="">
-            <input type="text" name="rut" placeholder="RUT" required id="rut" onblur="validarRUTInput()">
+        <form method="POST" action="" onsubmit="validarFormulario(event)">
+            <input type="text" name="rut" placeholder="RUT" required id="rut" onblur="validarRUTInput()" oninput="limpiarRut()">
             <input type="password" name="pass" placeholder="Contraseña" required>
             <button type="submit" name="solicitar">INGRESAR</button>
         </form>
