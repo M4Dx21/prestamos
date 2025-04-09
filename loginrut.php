@@ -72,7 +72,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['solicitar'])) {
     </div>
     <script>
         function mostrarError(message) {
-            const errorMessage = document.getElementById("error-message");
+            const errorMessage = document.querySelector(".error-message");
             errorMessage.textContent = message;
             errorMessage.style.display = "block";
         }
@@ -137,7 +137,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['solicitar'])) {
         <?php endif; ?>
 
         <form method="POST" action="" onsubmit="validarFormulario(event)">
-            <input type="text" name="rut" placeholder="RUT" required id="rut" onblur="validarRUTInput()" oninput="limpiarRut()">
+            <input type="text" name="rut" placeholder="RUT (sin puntos ni guión)" required id="rut" onblur="validarRUTInput()" oninput="limpiarRut()">
             <input type="password" name="pass" placeholder="Contraseña" required>
             <button type="submit" name="solicitar">INGRESAR</button>
         </form>

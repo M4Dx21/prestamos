@@ -18,14 +18,17 @@ if ($result->num_rows > 0) {
 }
 
 function validarRUT($rut) {
-    $rut = str_replace(array(".", "-"), "", $rut);
-    
-    if (!preg_match("/^[0-9]{7,8}[0-9kK]{1}$/", $rut)) {
+    $rut = str_replace(".", "", $rut);
+
+    if (strpos($rut, '-') === false) {
+        $rut = substr($rut, 0, -1) . '-' . substr($rut, -1);
+    }
+
+    if (!preg_match("/^[0-9]{7,8}-[0-9kK]{1}$/", $rut)) {
         return false;
     }
 
-    $rut_numeros = substr($rut, 0, -1);
-    $rut_dv = strtoupper(substr($rut, -1));
+    list($rut_numeros, $rut_dv) = explode("-", $rut);
 
     $suma = 0;
     $factor = 2;
@@ -41,11 +44,11 @@ function validarRUT($rut) {
         $dv_calculado = 'K';
     }
 
-    return $dv_calculado == $rut_dv;
+    return strtoupper($dv_calculado) == strtoupper($rut_dv);
 }
 
 function formatearRUT($rut) {
-    $rut = str_replace(array(".", "-"), "", $rut);
+    $rut = str_replace(array("."), "", $rut);
     $dv = strtoupper(substr($rut, -1));
     $rut = substr($rut, 0, -1);
     $rut = strrev(implode(".", str_split(strrev($rut), 3)));
@@ -111,7 +114,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['ingresar'])) {
         }
     }
 }
-
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['insertar'])) {
     $nro_serie = $_POST['nro_serie'];
@@ -191,13 +193,23 @@ if ($result1->num_rows > 0) {
     }
 }
 
-$sql2 = "SELECT rut, nombre, correo FROM usuarios WHERE rol = 'solicitante'";
+$sql2 = "SELECT rut, nombre, pass FROM usuarios WHERE rol = 'solicitante'";
 $result2 = $conn->query($sql2);
     
 $solicitudes_result2 = [];
 if ($result2->num_rows > 0) {
     while ($row = $result2->fetch_assoc()) {
         $solicitudes_result2[] = $row;
+    }
+}
+
+$sql3 = "SELECT rut, nombre, rol FROM usuarios WHERE rol = 'admin'";
+$result3 = $conn->query($sql3);
+    
+$solicitudes_result3 = [];
+if ($result3->num_rows > 0) {
+    while ($row = $result3->fetch_assoc()) {
+        $solicitudes_result3[] = $row;
     }
 }
 
@@ -236,7 +248,7 @@ if ($result2->num_rows > 0) {
         function limpiarRut() {
             const rutInput = document.getElementById("rut");
             let rut = rutInput.value;
-            rut = rut.replace(/\./g, "").replace("-", "");
+            rut = rut.replace(/\./g, "");
             rutInput.value = rut;
         }
 
@@ -248,15 +260,14 @@ if ($result2->num_rows > 0) {
 <body>
     <div class="container">
         <form method="POST" action="">
-            <input type="text" name="rut" placeholder="RUT" required id="rut" onblur="validarRUTInput()" oninput="limpiarRut()">
-            <input type="text" name="nombre" placeholder="Nombre" required id="nombre">
-            <input type="password" name="pass" placeholder="Contraseña" required id="pass">
-
             <select name="rol" required id="rol" onchange="toggleCorreo()">
                 <option value="prestamista">Prestamista</option>
                 <option value="solicitante">Solicitante</option>
                 <option value="admin">Admin</option>
             </select>
+            <input type="text" name="rut" placeholder="RUT (con guion solo para usuario administrador)" required id="rut" onblur="validarRUTInput()" oninput="limpiarRut()">
+            <input type="text" name="nombre" placeholder="Nombre" required id="nombre">
+            <input type="password" name="pass" placeholder="Contraseña" required id="pass">
 
             <input type="email" name="correo" placeholder="Correo" required id="correo">
             <button type="submit" name="ingresar">Registrar Usuario</button>
@@ -342,7 +353,7 @@ if ($result2->num_rows > 0) {
                     <tr>
                         <th>Nombre</th>
                         <th>RUT</th>
-                        <th>Correo</th>
+                        <th>Contraseña</th>
                         <th>Eliminar</th>
                     </tr>
                 </thead>
@@ -351,7 +362,7 @@ if ($result2->num_rows > 0) {
                         <tr>
                             <td><?php echo htmlspecialchars($solicitud2['nombre']); ?></td>
                             <td><?php echo htmlspecialchars($solicitud2['rut']); ?></td>
-                            <td><?php echo htmlspecialchars($solicitud2['correo']); ?></td>
+                            <td><?php echo htmlspecialchars($solicitud2['pass']); ?></td>
                             <td>
                                 <form method="POST" action="">
                                     <input type="hidden" name="rut" value="<?php echo $solicitud2['rut']; ?>">
@@ -363,6 +374,36 @@ if ($result2->num_rows > 0) {
                 </tbody>
             </table>
         <?php endif; ?>
+
+        <?php if (!empty($solicitudes_result3)): ?>
+            <h3>Administradores:</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Nombre</th>
+                        <th>RUT</th>
+                        <th>Rol</th>
+                        <th>Eliminar</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php foreach ($solicitudes_result3 as $solicitud3): ?>
+                        <tr>
+                            <td><?php echo htmlspecialchars($solicitud3['nombre']); ?></td>
+                            <td><?php echo htmlspecialchars($solicitud3['rut']); ?></td>
+                            <td><?php echo htmlspecialchars($solicitud3['rol']); ?></td>
+                            <td>
+                                <form method="POST" action="">
+                                    <input type="hidden" name="rut" value="<?php echo $solicitud3['rut']; ?>">
+                                    <button type="submit" name="eliminar-usuario" class="rechazar-btn-table">Eliminar</button>
+                                </form>
+                            </td>
+                        </tr>
+                    <?php endforeach; ?>
+                </tbody>
+            </table>
+        <?php endif; ?>
+
 
     </div>
 </body>

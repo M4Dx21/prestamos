@@ -25,7 +25,9 @@ if (!isset($_SESSION['nombre']) || !isset($_SESSION['rut'])) {
 
 $rut = $_SESSION['rut'];
 $sql_check = "SELECT id, nombre_solicitante, rut, fecha_solicitud, motivo_solicitud, fecha_entrega, nro_serie_equipo, estado 
-              FROM solicitudes WHERE rut = ? AND fecha_solicitud IS NOT NULL";
+              FROM solicitudes 
+              WHERE rut = ? AND fecha_solicitud IS NOT NULL
+              ORDER BY FIELD(estado, 'en proceso', 'aceptada', 'rechazada', 'terminada')";
 $stmt = $conn->prepare($sql_check);
 $stmt->bind_param("s", $rut);
 $stmt->execute();
@@ -102,7 +104,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['solicitar'])) {
                         echo "Error al enviar el correo a: $correo. Error: {$mail->ErrorInfo}\n";
                     }
                 }
-
+                $_SESSION['mensaje'] = "Solicitud enviada correctamente";
             } else {
                 echo "No se encontraron usuarios con correo registrado.";
             }
@@ -225,6 +227,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['devolver'])) {
                                 $fecha_solicitud = new DateTime($solicitud['fecha_solicitud']);
                                 echo $fecha_solicitud->format('d/m/y');?></td>
                             <td><?php echo htmlspecialchars($solicitud['estado']); ?></td>
+
                             <td>
                                 <?php if ($solicitud['estado'] == 'rechazada'): ?>
                                     <div class="rechazo-info">
@@ -238,14 +241,21 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['devolver'])) {
                                             ?>
                                         </p>
                                     </div>
-                                    <?php elseif ($solicitud['estado'] == 'aceptada'): ?>
+                                <?php elseif ($solicitud['estado'] == 'aceptada'): ?>
                                     <form method="POST" action="">
                                         <input type="hidden" name="nro_serie" value="<?php echo $solicitud['nro_serie_equipo']; ?>">
                                         <input type="hidden" name="id_solicitud" value="<?php echo $solicitud['id']; ?>">
                                         <button type="submit" name="devolver" class="rechazar-btn-table">Devolver Equipo</button>
                                     </form>
                                 <?php endif; ?>
+
+                                <?php if ($solicitud['estado'] == 'terminada' || $solicitud['estado'] == 'rechazada'): ?>
+                                    <button type="button" 
+                                            onclick="fillForm('<?php echo $solicitud['rut']; ?>', '<?php echo $solicitud['nombre_solicitante']; ?>', '<?php echo $solicitud['nro_serie_equipo']; ?>', '<?php echo $solicitud['motivo_solicitud']; ?>', '<?php echo $solicitud['id']; ?>');"
+                                            data-id="<?php echo $solicitud['id']; ?>">Repetir</button>
+                                <?php endif; ?>
                             </td>
+
                         </tr>
                     <?php endforeach; ?>
                 </tbody>
@@ -276,9 +286,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['devolver'])) {
                 closeRechazoModal();
             }
         }
-        
-    </script>
-        <script>
         function toggleAccountInfo() {
             var accountInfo = document.getElementById('accountInfo');
             if (accountInfo.style.display === "none") {
@@ -287,6 +294,14 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['devolver'])) {
                 accountInfo.style.display = "none";
             }
         }
+
+        function fillForm(rut, nombre, nro_serie, motivo, id_solicitud) {
+            document.getElementById('rut').value = rut;
+            document.getElementById('nombre').value = nombre;
+            document.getElementById('nro_serie').value = nro_serie;
+            document.getElementsByName('motivo')[0].value = motivo;
+        }
+
         </script>
 </body>
 </html>

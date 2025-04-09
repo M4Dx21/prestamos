@@ -37,7 +37,8 @@ function validarRUT($rut) {
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['solicitar'])) {
     $rut = $_POST['rut'];
     $pass = $_POST['pass'];
-
+    $error ="";
+    
     if (validarRUT($rut)) {
         $sql = "SELECT * FROM usuarios WHERE rut = '$rut' AND pass = '$pass' AND rol ='prestamista' ";
         $result = $conn->query($sql);
@@ -74,7 +75,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['solicitar'])) {
     </div>
     <script>
         function mostrarError(message) {
-            const errorMessage = document.getElementById("error-message");
+            const errorMessage = document.querySelector(".error-message");
             errorMessage.textContent = message;
             errorMessage.style.display = "block";
         }

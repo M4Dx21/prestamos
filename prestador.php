@@ -8,7 +8,7 @@ if (!isset($_SESSION['rut'])) {
 }
 
 $resolucion_filtro = isset($_POST['resolucion']) ? $_POST['resolucion'] : '';
-$nombre_usuario_filtro = isset($_POST['nombre_usuario']) ? $_POST['nombre_usuario'] : ''; // Capturamos el valor del nombre solicitante
+$nombre_usuario_filtro = isset($_POST['nombre_usuario']) ? $_POST['nombre_usuario'] : '';
 
 $sql_check = "SELECT id, nombre_solicitante, rut, fecha_solicitud, motivo_solicitud, fecha_entrega, nro_serie_equipo, estado FROM solicitudes WHERE 1";
 
@@ -17,12 +17,19 @@ if ($resolucion_filtro) {
 }
 
 if ($nombre_usuario_filtro) {
-    $nombre_usuario_filtro = $conn->real_escape_string($nombre_usuario_filtro); // Sanitizamos el input
+    $nombre_usuario_filtro = $conn->real_escape_string($nombre_usuario_filtro);
     $sql_check .= " AND nombre_solicitante LIKE '%$nombre_usuario_filtro%'";
 }
 
-$sql_check .= " ORDER BY estado = 'en proceso' DESC, fecha_solicitud ASC";
-
+$sql_check .= " ORDER BY 
+                    CASE estado 
+                        WHEN 'en proceso' THEN 1
+                        WHEN 'aceptada' THEN 2
+                        WHEN 'rechazada' THEN 3
+                        WHEN 'terminada' THEN 4
+                        ELSE 5 
+                    END, fecha_solicitud ASC";
+                    
 $result = $conn->query($sql_check);
 $solicitudes_result = [];
 
@@ -121,7 +128,7 @@ if ($resolucion_filtro) {
 }
 
 if ($nombre_usuario_filtro) {
-    $nombre_usuario_filtro = $conn->real_escape_string($nombre_usuario_filtro); // Sanitizamos el input
+    $nombre_usuario_filtro = $conn->real_escape_string($nombre_usuario_filtro);
     $sql_check .= " AND nombre_solicitante LIKE '%$nombre_usuario_filtro%'";
 }
 
