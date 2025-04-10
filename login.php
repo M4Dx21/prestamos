@@ -2,11 +2,6 @@
 session_start();
 include 'db.php';
 
-function formatearRUT($rut) {
-    $rut = str_replace(array(".", "-"), "", $rut);
-    return $rut;
-}
-
 function validarRUT($rut) {
     $rut = str_replace(array(".", "-"), "", $rut);
     
@@ -37,10 +32,11 @@ function validarRUT($rut) {
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['solicitar'])) {
     $rut = $_POST['rut'];
     $pass = $_POST['pass'];
-    $error ="";
-    
+
+    $rut = str_replace(array(".", "-"), "", $rut);
+
     if (validarRUT($rut)) {
-        $sql = "SELECT * FROM usuarios WHERE rut = '$rut' AND pass = '$pass' AND rol ='prestamista' ";
+        $sql = "SELECT * FROM usuarios WHERE rut = '$rut' AND pass = '$pass' AND rol ='prestamista'";
         $result = $conn->query($sql);
 
         if ($result->num_rows > 0) {
@@ -96,7 +92,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['solicitar'])) {
             let suma = 0;
             let factor = 2;
             for (let i = rut_numeros.length - 1; i >= 0; i--) {
-                suma += parseInt(rut.charAt(i)) * factor;
+                suma += parseInt(rut_numeros.charAt(i)) * factor;
                 factor = (factor === 7) ? 2 : factor + 1;
             }
 
@@ -123,7 +119,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['solicitar'])) {
             rut = rut.replace(/\./g, "").replace("-", "");
             rutInput.value = rut;
         }
-        
+
         function validarFormulario(event) {
             if (!validarRUTInput()) {
                 event.preventDefault();
@@ -135,12 +131,12 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['solicitar'])) {
     <div class="container">
         <h2>Iniciar sesión</h2>
 
-        <?php if (isset($error)): ?>
-            <div class="error-message"><?php echo $error; ?></div>
-        <?php endif; ?>
+        <div class="error-message" style="<?php echo isset($error) ? 'display: block;' : 'display: none;'; ?>">
+            <?php echo isset($error) ? $error : ''; ?>
+        </div>
 
         <form method="POST" action="" onsubmit="validarFormulario(event)">
-            <input type="text" name="rut" placeholder="RUT" required id="rut" onblur="validarRUTInput()" oninput="limpiarRut()">
+            <input type="text" name="rut" placeholder="RUT (sin puntos ni guión)" required id="rut" onblur="validarRUT()" oninput="limpiarRut()">
             <input type="password" name="pass" placeholder="Contraseña" required>
             <button type="submit" name="solicitar">INGRESAR</button>
         </form>

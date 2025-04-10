@@ -33,11 +33,10 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['solicitar'])) {
     $rut = $_POST['rut'];
     $pass = $_POST['pass'];
 
-
     $rut = str_replace(array(".", "-"), "", $rut);
 
     if (validarRUT($rut)) {
-        $sql = "SELECT * FROM usuarios WHERE rut = '$rut' AND pass = '$pass' AND rol ='solicitante' ";
+        $sql = "SELECT * FROM usuarios WHERE rut = '$rut' AND pass = '$pass' AND rol ='solicitante'";
         $result = $conn->query($sql);
 
         if ($result->num_rows > 0) {
@@ -132,12 +131,12 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['solicitar'])) {
     <div class="container">
         <h2>Iniciar sesión</h2>
 
-        <?php if (isset($error)): ?>
-            <div class="error-message"><?php echo $error; ?></div>
-        <?php endif; ?>
+        <div class="error-message" style="<?php echo isset($error) ? 'display: block;' : 'display: none;'; ?>">
+            <?php echo isset($error) ? $error : ''; ?>
+        </div>
 
         <form method="POST" action="" onsubmit="validarFormulario(event)">
-            <input type="text" name="rut" placeholder="RUT (sin puntos ni guión)" required id="rut" onblur="validarRUTInput()" oninput="limpiarRut()">
+            <input type="text" name="rut" placeholder="RUT (sin puntos ni guión)" required id="rut" onblur="validarRUT()" oninput="limpiarRut()">
             <input type="password" name="pass" placeholder="Contraseña" required>
             <button type="submit" name="solicitar">INGRESAR</button>
         </form>

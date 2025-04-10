@@ -265,7 +265,7 @@ if ($result3->num_rows > 0) {
                 <option value="solicitante">Solicitante</option>
                 <option value="admin">Admin</option>
             </select>
-            <input type="text" name="rut" placeholder="RUT (con guion solo para usuario administrador)" required id="rut" onblur="validarRUTInput()" oninput="limpiarRut()">
+            <input type="text" name="rut" placeholder="RUT (sin puntos ni guion, solo con guion para ingresar usuario tipo administrador)" required id="rut" onblur="validarRUTInput()" oninput="limpiarRut()">
             <input type="text" name="nombre" placeholder="Nombre" required id="nombre">
             <input type="password" name="pass" placeholder="Contraseña" required id="pass">
 

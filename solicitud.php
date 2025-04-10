@@ -90,7 +90,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['solicitar'])) {
                         $mail->setFrom('manuel.arrano@redsalud.gob.cl', 'Sistema de Solicitudes TI');
                         $mail->addAddress($correo);
 
-                        $mail->Subject = "Nueva solicitud de equipo TI";
+                        $mail->Subject = "NUEVA SOLICITUD DE PRESTAMO DE EQIPO TI";
                         $mail->Body    = "Se ha registrado una nueva solicitud de equipo. Detalles:\n\n";
                         $mail->Body   .= "Solicitante: $nombre\n";
                         $mail->Body   .= "RUT: $rut\n";
@@ -180,7 +180,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['devolver'])) {
                 <?php endwhile; ?>
             </select><br><br>
             <textarea name="motivo" placeholder="Motivo de ingreso (max 300 caracteres)" required></textarea>
-            <button type="submit" name="solicitar">Registrar Ingreso</button>
+            <button type="submit" name="solicitar">Solicitar equipo</button>
         </form>
         <?php if (!empty($solicitudes_result)): ?>
             <h3>Solicitudes Realizadas</h3>

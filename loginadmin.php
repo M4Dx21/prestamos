@@ -133,9 +133,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['solicitar'])) {
     <div class="container">
         <h2>Iniciar sesión</h2>
 
-        <?php if (isset($error)): ?>
-            <div class="error-message"><?php echo $error; ?></div>
-        <?php endif; ?>
+        <div class="error-message" style="<?php echo isset($error) ? 'display: block;' : 'display: none;'; ?>">
+            <?php echo isset($error) ? $error : ''; ?>
+        </div>
 
         <form method="POST" action="" onsubmit="validarFormulario(event)">
             <input type="text" name="rut" placeholder="RUT(con guión)" required id="rut" onblur="validarRUTInput()" oninput="limpiarRut()">
