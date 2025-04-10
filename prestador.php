@@ -156,7 +156,7 @@ $sql_check .= " ORDER BY estado = 'en proceso' DESC, fecha_solicitud ASC";
         </div>
     </div>
 </head>
-<body>
+<body class="prestador-page">
     <div class="container">
         <div class="filters">
             <form method="POST" action="">
@@ -187,6 +187,7 @@ $sql_check .= " ORDER BY estado = 'en proceso' DESC, fecha_solicitud ASC";
                         <th>Nro° Serie</th>
                         <th>Fecha Solicitud</th>
                         <th>Estado</th>
+                        <th>Motivo</th>
                         <th>Resolución</th>
                     </tr>
                 </thead>
@@ -224,6 +225,7 @@ $sql_check .= " ORDER BY estado = 'en proceso' DESC, fecha_solicitud ASC";
                                 echo $fecha_solicitud->format('d/m/y');
                             ?></td>
                             <td><?php echo htmlspecialchars($solicitud['estado']); ?></td>
+                            <td><?php echo htmlspecialchars($solicitud['motivo_solicitud']); ?></td>
                             <td>
                                 <?php if ($solicitud['estado'] == 'en proceso'): ?>
                                     <form method="POST" style="display: inline;">

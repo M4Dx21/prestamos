@@ -260,6 +260,11 @@ form {
    align-items: center;
 }
 
+.prestador-page .container {
+   max-width: 1600px;
+   padding: 30px;
+}
+
 .volver-btn:hover {
    background-color: #093b70;
 }

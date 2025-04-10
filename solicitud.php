@@ -90,7 +90,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['solicitar'])) {
                         $mail->setFrom('manuel.arrano@redsalud.gob.cl', 'Sistema de Solicitudes TI');
                         $mail->addAddress($correo);
 
-                        $mail->Subject = "NUEVA SOLICITUD DE PRESTAMO DE EQIPO TI";
+                        $mail->Subject = "NUEVA SOLICITUD DE PRESTAMO DE EQUIPO TI";
                         $mail->Body    = "Se ha registrado una nueva solicitud de equipo. Detalles:\n\n";
                         $mail->Body   .= "Solicitante: $nombre\n";
                         $mail->Body   .= "RUT: $rut\n";
@@ -217,17 +217,16 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['devolver'])) {
                             <td><?php echo htmlspecialchars($solicitud['nombre_solicitante']); ?></td>
                             <td><?php 
                                 $nro_serie_equipo = $solicitud['nro_serie_equipo'];
-                                $sql_equipo = "SELECT nombre_equipo FROM equipos WHERE nro_serie = '$nro_serie_equipo'";
+                                $sql_equipo = "SELECT nombre_equipo, nro_serie FROM equipos WHERE nro_serie = '$nro_serie_equipo'";
                                 $equipo_result = $conn->query($sql_equipo);
                                 $equipo = $equipo_result->fetch_assoc();
-                                echo htmlspecialchars($equipo['nombre_equipo']);
+                                echo htmlspecialchars($equipo['nombre_equipo']) . " (Serie: " . htmlspecialchars($equipo['nro_serie']) . ")";
                             ?></td>
                             <td><?php echo htmlspecialchars($solicitud['motivo_solicitud']); ?></td>
                             <td><?php 
                                 $fecha_solicitud = new DateTime($solicitud['fecha_solicitud']);
                                 echo $fecha_solicitud->format('d/m/y');?></td>
                             <td><?php echo htmlspecialchars($solicitud['estado']); ?></td>
-
                             <td>
                                 <?php if ($solicitud['estado'] == 'rechazada'): ?>
                                     <div class="rechazo-info">
@@ -247,12 +246,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['devolver'])) {
                                         <input type="hidden" name="id_solicitud" value="<?php echo $solicitud['id']; ?>">
                                         <button type="submit" name="devolver" class="rechazar-btn-table">Devolver Equipo</button>
                                     </form>
-                                <?php endif; ?>
-
-                                <?php if ($solicitud['estado'] == 'terminada' || $solicitud['estado'] == 'rechazada'): ?>
-                                    <button type="button" 
-                                            onclick="fillForm('<?php echo $solicitud['rut']; ?>', '<?php echo $solicitud['nombre_solicitante']; ?>', '<?php echo $solicitud['nro_serie_equipo']; ?>', '<?php echo $solicitud['motivo_solicitud']; ?>', '<?php echo $solicitud['id']; ?>');"
-                                            data-id="<?php echo $solicitud['id']; ?>">Repetir</button>
                                 <?php endif; ?>
                             </td>
 
