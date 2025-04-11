@@ -21,14 +21,19 @@ if ($nombre_usuario_filtro) {
     $sql_check .= " AND nombre_solicitante LIKE '%$nombre_usuario_filtro%'";
 }
 
+$cantidad_filas = isset($_POST['cantidad_filas']) ? (int)$_POST['cantidad_filas'] : 5;
+
 $sql_check .= " ORDER BY 
                     CASE estado 
                         WHEN 'en proceso' THEN 1
-                        WHEN 'aceptada' THEN 2
-                        WHEN 'rechazada' THEN 3
-                        WHEN 'terminada' THEN 4
-                        ELSE 5 
-                    END, fecha_solicitud ASC";
+                        WHEN 'en devolucion' THEN 2
+                        WHEN 'devuelto' THEN 3
+                        WHEN 'aceptada' THEN 4
+                        WHEN 'rechazada' THEN 5
+                        WHEN 'terminada' THEN 6
+                        ELSE 6 
+                    END, fecha_solicitud ASC
+                ";
                     
 $result = $conn->query($sql_check);
 $solicitudes_result = [];
@@ -97,6 +102,37 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["rechazar"])) {
     }
 }
 
+if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["rechazar-dev"])) {
+    $id = $_POST["id"];
+    $motivo_rechazo = $_POST["motivo_rechazo"];
+    $nro_serie = $_POST["nro_serie"];
+
+    // Actualizamos el estado de la solicitud a 'aceptada'
+    if ($stmt = $conn->prepare("UPDATE solicitudes SET estado = 'aceptada' WHERE id = ?")) {
+        $stmt->bind_param("i", $id);
+        if ($stmt->execute()) {
+            // Ahora actualizamos la tabla 'pedicion' para la solicitud correspondiente
+            $fecha_decision = date('Y-m-d H:i:s'); 
+            $stmt_pedicion = $conn->prepare("UPDATE pedicion SET motivo_rechazo = ?, estado = 'aceptada', fecha_decision = ? WHERE id_solicitud = ?");
+            $stmt_pedicion->bind_param("ssi", $motivo_rechazo, $fecha_decision, $id);
+            if ($stmt_pedicion->execute()) {
+                // Actualizamos el estado del equipo a 'no disponible'
+                $stmt_equipo1 = $conn->prepare("UPDATE equipos SET estado = 'no disponible' WHERE nro_serie = ?");
+                $stmt_equipo1->bind_param("s", $nro_serie);
+                $stmt_equipo1->execute();
+                
+                // Redirigir a la misma página después de la operación exitosa
+                header("Location: ".$_SERVER['PHP_SELF']);
+                exit();
+            } else {
+                $mensaje = "<div class='msg error'><span class='icon'>&#10060;</span> Error al actualizar la tabla 'pedicion': " . $stmt_pedicion->error . "</div>";
+            }
+        } else {
+            $mensaje = "<div class='msg error'><span class='icon'>&#10060;</span> Error al rechazar la solicitud: " . $stmt->error . "</div>";
+        }
+    }
+}
+
 if (isset($_POST['limpiar_filtros'])) {
     $resolucion_filtro = '';
     $nombre_usuario_filtro = '';
@@ -133,6 +169,27 @@ if ($nombre_usuario_filtro) {
 }
 
 $sql_check .= " ORDER BY estado = 'en proceso' DESC, fecha_solicitud ASC";
+
+if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['devolver'])) {
+    $id_solicitud = $_POST['id_solicitud'];
+    $nro_serie = $_POST['nro_serie'];
+
+    $fecha_entrega = date('Y-m-d H:i:s');
+
+    $sql_update_estado = "UPDATE solicitudes SET estado = 'terminada', fecha_entrega = ? WHERE id = ?";
+    $stmt = $conn->prepare($sql_update_estado);
+    $stmt->bind_param("si", $fecha_entrega, $id_solicitud);
+    if ($stmt->execute()) {
+        $sql_update_equipo = "UPDATE equipos SET estado = 'disponible' WHERE nro_serie = ?";
+        $stmt = $conn->prepare($sql_update_equipo);
+        $stmt->bind_param("s", $nro_serie);
+        $stmt->execute();
+        header("Location: ".$_SERVER['PHP_SELF']);
+            exit();
+    } else {
+        echo "Error al actualizar el estado de la solicitud.";
+    }
+}
 
 ?>
 <!DOCTYPE html>
@@ -171,6 +228,8 @@ $sql_check .= " ORDER BY estado = 'en proceso' DESC, fecha_solicitud ASC";
                     <option value="rechazada" <?php echo $resolucion_filtro == 'rechazada' ? 'selected' : ''; ?>>Rechazada</option>
                     <option value="en proceso" <?php echo $resolucion_filtro == 'en proceso' ? 'selected' : ''; ?>>En Proceso</option>
                     <option value="terminada" <?php echo $resolucion_filtro == 'terminada' ? 'selected' : ''; ?>>Terminada</option>
+                    <option value="en devolucion" <?php echo $resolucion_filtro == 'en devolucion' ? 'selected' : ''; ?>>en devolucion</option>
+                    <option value="devuelto" <?php echo $resolucion_filtro == 'devuelto' ? 'selected' : ''; ?>>devuelto</option>
                 </select>
                 <button type="submit">Filtrar</button>
                 <button type="submit" name="limpiar_filtros" class="limpiar-filtros-btn">Limpiar Filtros</button>
@@ -205,8 +264,12 @@ $sql_check .= " ORDER BY estado = 'en proceso' DESC, fecha_solicitud ASC";
                             case 'aceptada':
                                 $estado_class = 'estado-aceptada';
                                 break;
-                                case 'rechazada';
+                            case 'rechazada':
                                 $estado_class = 'estado-rechazada';
+                                break;
+                            case 'en devolucion':
+                                $estado_class = 'estado-devolucion';
+                                break;
                         }
                         ?>
                         <tr class="<?php echo $estado_class; ?>">
@@ -239,6 +302,18 @@ $sql_check .= " ORDER BY estado = 'en proceso' DESC, fecha_solicitud ASC";
                                         <input type="text" name="motivo_rechazo" placeholder="Motivo de rechazo" required>
                                         <button type="submit" name="rechazar" class="rechazar-btn-table">Rechazar</button>
                                     </form>
+                                    <?php elseif ($solicitud['estado'] == 'en devolucion'): ?>
+                                    <form method="POST" action="">
+                                        <input type="hidden" name="nro_serie" value="<?php echo $solicitud['nro_serie_equipo']; ?>">
+                                        <input type="hidden" name="id_solicitud" value="<?php echo $solicitud['id']; ?>">
+                                        <button type="submit" name="devolver" class="aceptar-btn-table">Aceptar devolucion</button>
+                                    </form>
+                                    <form method="POST" style="display: inline;">
+                                        <input type="hidden" name="id" value="<?php echo $solicitud['id']; ?>">
+                                        <input type="hidden" name="nro_serie" value="<?php echo $solicitud['nro_serie_equipo']; ?>">
+                                        <input type="text" name="motivo_rechazo" placeholder="Motivo de rechazo" required>
+                                        <button type="submit" name="rechazar-dev" class="rechazar-btn-table">Rechazar devolucion</button>
+                                    </form>
                                 <?php elseif ($solicitud['estado'] == 'rechazada'): ?>
                                     <div class="rechazo-motivo"><?php 
                                             $sql_motivo_rechazo = "SELECT motivo_rechazo FROM pedicion WHERE id_solicitud = ".$solicitud['id']." AND estado = 'rechazada' LIMIT 1";
@@ -260,8 +335,7 @@ $sql_check .= " ORDER BY estado = 'en proceso' DESC, fecha_solicitud ASC";
         <?php else: ?>
             <p>No hay solicitudes disponibles.</p>
         <?php endif; ?>
-    </div>
-
+</div>
     <script>
         function toggleAccountInfo() {
             var accountInfo = document.getElementById('accountInfo');

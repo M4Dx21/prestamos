@@ -375,6 +375,11 @@ tr.estado-en-proceso {
    color: #000000;
 }
 
+tr.estado-devolucion{
+   background-color: #d4f37f !important;
+   color: #000000;
+}
+
 tr.estado-aceptada {
    background-color: #fab2b8 !important;
    color: #000000;
@@ -385,8 +390,13 @@ tr.estado-rechazada {
    color: #000000;
 }
 
+tr.estado-devuelto {
+   background-color: #f5b38d !important;
+   color: #000000;
+}
+
 tr.estado-terminada {
-   background-color: #b1f3c1 !important;
+   background-color: #9bf0b0 !important;
    color: #000000;
 }
 

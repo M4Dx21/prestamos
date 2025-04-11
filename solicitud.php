@@ -11,8 +11,12 @@ function getEstadoClass($estado) {
             return 'estado-rechazada';
         case 'aceptada':
             return 'estado-aceptada';
-            case 'terminada';
+        case 'terminada':
             return 'estado-terminada';
+        case 'en devolucion':
+            return 'estado-devolucion';
+        case 'devuelto':
+            return 'estado-devuelto';
         default:
             return 'estado-en-proceso';
     }
@@ -24,10 +28,11 @@ if (!isset($_SESSION['nombre']) || !isset($_SESSION['rut'])) {
 }
 
 $rut = $_SESSION['rut'];
-$sql_check = "SELECT id, nombre_solicitante, rut, fecha_solicitud, motivo_solicitud, fecha_entrega, nro_serie_equipo, estado 
-              FROM solicitudes 
-              WHERE rut = ? AND fecha_solicitud IS NOT NULL
-              ORDER BY FIELD(estado, 'en proceso', 'aceptada', 'rechazada', 'terminada')";
+$sql_check = "SELECT s.id, s.nombre_solicitante, s.rut, s.fecha_solicitud, s.motivo_solicitud, s.fecha_entrega, s.nro_serie_equipo, s.estado, p.motivo_rechazo
+              FROM solicitudes s
+              LEFT JOIN pedicion p ON s.id = p.id_solicitud
+              WHERE s.rut = ? AND s.fecha_solicitud IS NOT NULL
+              ORDER BY FIELD(s.estado, 'en proceso', 'aceptada', 'en devolucion', 'rechazada', 'terminada')";
 $stmt = $conn->prepare($sql_check);
 $stmt->bind_param("s", $rut);
 $stmt->execute();
@@ -125,16 +130,16 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['devolver'])) {
 
     $fecha_entrega = date('Y-m-d H:i:s');
 
-    $sql_update_estado = "UPDATE solicitudes SET estado = 'terminada', fecha_entrega = ? WHERE id = ?";
+    $sql_update_estado = "UPDATE solicitudes SET estado = 'en devolucion' WHERE id = ?";
     $stmt = $conn->prepare($sql_update_estado);
-    $stmt->bind_param("si", $fecha_entrega, $id_solicitud);
+    $stmt->bind_param("s", $id_solicitud);
     if ($stmt->execute()) {
-        $sql_update_equipo = "UPDATE equipos SET estado = 'disponible' WHERE nro_serie = ?";
+        $sql_update_equipo = "UPDATE equipos SET estado = 'no disponible' WHERE nro_serie = ?";
         $stmt = $conn->prepare($sql_update_equipo);
         $stmt->bind_param("s", $nro_serie);
         $stmt->execute();
         header("Location: ".$_SERVER['PHP_SELF']);
-            exit();
+        exit();
     } else {
         echo "Error al actualizar el estado de la solicitud.";
     }
@@ -198,20 +203,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['devolver'])) {
                 <tbody>
                     <?php foreach ($solicitudes_result as $solicitud): ?>
                         <?php 
-                        $estado_class = '';
-                        switch ($solicitud['estado']) {
-                            case 'en proceso':
-                                $estado_class = 'estado-en-proceso';
-                                break;
-                            case 'terminada':
-                                $estado_class = 'estado-terminada';
-                                break;
-                            case 'aceptada':
-                                $estado_class = 'estado-aceptada';
-                                break;
-                                case 'rechazada';
-                                $estado_class = 'estado-rechazada';
-                        }
+                        $estado_class = getEstadoClass(strtolower(trim($solicitud['estado']))); 
                         ?>
                         <tr class="<?php echo $estado_class; ?>">
                             <td><?php echo htmlspecialchars($solicitud['nombre_solicitante']); ?></td>
@@ -231,16 +223,20 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['devolver'])) {
                                 <?php if ($solicitud['estado'] == 'rechazada'): ?>
                                     <div class="rechazo-info">
                                         <p><strong>Motivo:</strong> 
-                                            <?php 
-                                                $id = $solicitud['id'];
-                                                $sql_rechazo = "SELECT motivo_rechazo FROM pedicion WHERE id_solicitud = '$id'";
-                                                $pedicion_result = $conn->query($sql_rechazo);
-                                                $pedicion = $pedicion_result->fetch_assoc();
-                                                echo htmlspecialchars($pedicion['motivo_rechazo']);
-                                            ?>
+                                            <?php echo htmlspecialchars($solicitud['motivo_rechazo']); ?>
                                         </p>
                                     </div>
-                                <?php elseif ($solicitud['estado'] == 'aceptada'): ?>
+                                <?php endif; ?>
+
+                                <?php if ($solicitud['estado'] == 'aceptada'): ?>
+                                    <?php 
+                                        $id = $solicitud['id'];
+                                    ?>
+                                    <?php if ($solicitud['motivo_rechazo']): ?>
+                                        <div class="rechazo-info">
+                                            <p><strong>Motivo de observación:</strong> <?php echo htmlspecialchars($solicitud['motivo_rechazo']); ?></p>
+                                        </div>
+                                    <?php endif; ?>
                                     <form method="POST" action="">
                                         <input type="hidden" name="nro_serie" value="<?php echo $solicitud['nro_serie_equipo']; ?>">
                                         <input type="hidden" name="id_solicitud" value="<?php echo $solicitud['id']; ?>">
@@ -248,7 +244,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['devolver'])) {
                                     </form>
                                 <?php endif; ?>
                             </td>
-
                         </tr>
                     <?php endforeach; ?>
                 </tbody>
