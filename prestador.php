@@ -107,21 +107,17 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["rechazar-dev"])) {
     $motivo_rechazo = $_POST["motivo_rechazo"];
     $nro_serie = $_POST["nro_serie"];
 
-    // Actualizamos el estado de la solicitud a 'aceptada'
     if ($stmt = $conn->prepare("UPDATE solicitudes SET estado = 'aceptada' WHERE id = ?")) {
         $stmt->bind_param("i", $id);
         if ($stmt->execute()) {
-            // Ahora actualizamos la tabla 'pedicion' para la solicitud correspondiente
             $fecha_decision = date('Y-m-d H:i:s'); 
             $stmt_pedicion = $conn->prepare("UPDATE pedicion SET motivo_rechazo = ?, estado = 'aceptada', fecha_decision = ? WHERE id_solicitud = ?");
             $stmt_pedicion->bind_param("ssi", $motivo_rechazo, $fecha_decision, $id);
             if ($stmt_pedicion->execute()) {
-                // Actualizamos el estado del equipo a 'no disponible'
                 $stmt_equipo1 = $conn->prepare("UPDATE equipos SET estado = 'no disponible' WHERE nro_serie = ?");
                 $stmt_equipo1->bind_param("s", $nro_serie);
                 $stmt_equipo1->execute();
                 
-                // Redirigir a la misma página después de la operación exitosa
                 header("Location: ".$_SERVER['PHP_SELF']);
                 exit();
             } else {
@@ -227,9 +223,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['devolver'])) {
                     <option value="aceptada" <?php echo $resolucion_filtro == 'aceptada' ? 'selected' : ''; ?>>Aceptada</option>
                     <option value="rechazada" <?php echo $resolucion_filtro == 'rechazada' ? 'selected' : ''; ?>>Rechazada</option>
                     <option value="en proceso" <?php echo $resolucion_filtro == 'en proceso' ? 'selected' : ''; ?>>En Proceso</option>
-                    <option value="terminada" <?php echo $resolucion_filtro == 'terminada' ? 'selected' : ''; ?>>Terminada</option>
                     <option value="en devolucion" <?php echo $resolucion_filtro == 'en devolucion' ? 'selected' : ''; ?>>en devolucion</option>
-                    <option value="devuelto" <?php echo $resolucion_filtro == 'devuelto' ? 'selected' : ''; ?>>devuelto</option>
+                    <option value="terminada" <?php echo $resolucion_filtro == 'terminada' ? 'selected' : ''; ?>>Terminada</option>
                 </select>
                 <button type="submit">Filtrar</button>
                 <button type="submit" name="limpiar_filtros" class="limpiar-filtros-btn">Limpiar Filtros</button>

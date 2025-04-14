@@ -1,0 +1,32 @@
+version: '3.8'
+
+services:
+  # Servicio para la aplicación PHP
+  web:
+    image: php:8.1-apache
+    container_name: my_php_app
+    ports:
+      - "8080:80"  # Mapea el puerto 80 del contenedor al puerto 8080 de tu máquina
+    volumes:
+      - .:/var/www/html  # Sincroniza los archivos del proyecto con el contenedor
+    networks:
+      - app-network
+    environment:
+      - VIRTUAL_HOST=localhost
+      - VIRTUAL_PORT=80
+
+  # Servicio para la base de datos MySQL
+  db:
+    image: mysql:5.7
+    container_name: my_mysql_db
+    environment:
+      MYSQL_ALLOW_EMPTY_PASSWORD: yes # Cambia esta contraseña
+      MYSQL_DATABASE: pedicion          # Nombre de la base de datos
+    ports:
+      - "3306:3306"  # Mapea el puerto 3306 de la base de datos
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge

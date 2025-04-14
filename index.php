@@ -38,6 +38,9 @@
             }
         }
         ?>
-    </div>
 </body>
+        <div class="qr-container">
+            <strong><p class="qr-text">Manual de uso:</p></strong>
+            <img src="manual.png" alt="Código QR" class="qr-image">
+        </div>
 </html>

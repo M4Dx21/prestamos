@@ -184,7 +184,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['devolver'])) {
                     </option>
                 <?php endwhile; ?>
             </select><br><br>
-            <textarea name="motivo" placeholder="Motivo de ingreso (max 300 caracteres)" required></textarea>
+            <textarea name="motivo" placeholder="Motivo de solicitud (max 300 caracteres)" required></textarea>
             <button type="submit" name="solicitar">Solicitar equipo</button>
         </form>
         <?php if (!empty($solicitudes_result)): ?>
@@ -234,7 +234,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['devolver'])) {
                                     ?>
                                     <?php if ($solicitud['motivo_rechazo']): ?>
                                         <div class="rechazo-info">
-                                            <p><strong>Motivo de observación:</strong> <?php echo htmlspecialchars($solicitud['motivo_rechazo']); ?></p>
+                                            <p><strong>Observación:</strong> <?php echo htmlspecialchars($solicitud['motivo_rechazo']); ?></p>
                                         </div>
                                     <?php endif; ?>
                                     <form method="POST" action="">
