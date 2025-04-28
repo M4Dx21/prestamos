@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <title>Login</title>
     <link rel="stylesheet" href="styles.css">
+</head>
+<body class="index-page">
     <div class="header">
         <img src="logo.png" alt="Logo">
         <div class="header-text">
@@ -11,8 +13,6 @@
             <div class="sub-title">Hospital Clínico Félix Bulnes</div>
         </div>
     </div>
-</head>
-<body class="index-page">
     <div class="container">
         <h2>Selecciona tu usuario</h2>
         <form method="post">
@@ -38,9 +38,9 @@
             }
         }
         ?>
-</body>
         <div class="qr-container">
             <strong><p class="qr-text">Manual de uso:</p></strong>
             <img src="manual.png" alt="Código QR" class="qr-image">
         </div>
+</body>
 </html>

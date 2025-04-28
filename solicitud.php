@@ -138,6 +138,42 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['devolver'])) {
         $stmt = $conn->prepare($sql_update_equipo);
         $stmt->bind_param("s", $nro_serie);
         $stmt->execute();
+
+        $sql_correos = "SELECT correo FROM usuarios";
+        $result_correos = $conn->query($sql_correos);
+
+        if ($result_correos->num_rows > 0) {
+            while ($row = $result_correos->fetch_assoc()) {
+                $correo = $row['correo'];
+
+                $mail = new PHPMailer(true);
+                try {
+                    $mail->isSMTP();
+                    $mail->Host = 'smtp.office365.com';
+                    $mail->SMTPAuth = true;
+                    $mail->Username = 'manuel.arrano@redsalud.gob.cl';
+                    $mail->Password = 'Z)230902217716ot';
+                    $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
+                    $mail->Port = 587;
+
+                    $mail->setFrom('manuel.arrano@redsalud.gob.cl', 'Sistema de Solicitudes TI');
+                    $mail->addAddress($correo);
+
+                    $mail->Subject = "DEVOLUCION DE EQUIPO TI";
+                    $mail->Body    = "Se ha registrado una devolución de equipo.\n\n";
+                    $mail->Body   .= "Número de serie del equipo devuelto: $nro_serie\n";
+                    $mail->Body   .= "Fecha de devolución: " . date("d/m/Y H:i:s") . "\n\n";
+                    $mail->Body   .= "Atentamente,\nSistema de Solicitudes TI";
+
+                    $mail->send();
+                } catch (Exception $e) {
+                    echo "Error al enviar el correo a: $correo. Error: {$mail->ErrorInfo}\n";
+                }
+            }
+        } else {
+            echo "No se encontraron usuarios con correo registrado.";
+        }
+
         header("Location: ".$_SERVER['PHP_SELF']);
         exit();
     } else {
@@ -167,7 +203,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['devolver'])) {
         </div>
     </div>
 </head>
-<body>
+<body class="prestador-page">
 <div class="container">
     <div class="main-content">
     <form method="POST" action="">

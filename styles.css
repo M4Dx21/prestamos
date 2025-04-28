@@ -286,7 +286,6 @@ td form {
    gap: 10px;
 }
 
-
 .filters form {
    display: flex;
    gap: 10px;
@@ -402,16 +401,19 @@ tr.estado-terminada {
 
 .qr-container {
    display: flex;
+   flex-direction: column;
    justify-content: center;
    align-items: center;
-   margin-left: 20px;
-   max-width: 100px !important;
-   max-height: 100px !important;
+   max-width: 130px;
+   max-height: 130px;
+   margin: 20px auto;
+   padding: 10px;
+   box-sizing: border-box;
 }
 
 .qr-image {
-   max-width: 50px !important;
-   max-height: 50px !important;
+   height: auto;
+   object-fit: contain;
 }
 
 .edit-form {
