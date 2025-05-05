@@ -62,7 +62,7 @@ if (isset($_GET['nombre_equipo'])) {
     echo json_encode($numeros_serie);
 }
 
-if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['solicitar'])) {
+if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['rut'], $_POST['nombre'], $_POST['motivo'], $_POST['nro_serie'])) {
     $rut = $_POST['rut'];
     $nombre = $_POST['nombre'];
     $nro_serie = $_POST['nro_serie'];
@@ -206,7 +206,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['devolver'])) {
 <body class="prestador-page">
 <div class="container">
     <div class="main-content">
-    <form method="POST" action="">
+    <form method="POST" action="" id="solicitudForm">
             <input type="text" name="rut" value="<?php echo $_SESSION['rut']; ?>" placeholder="RUT" required id="rut" readonly>
             <input type="text" name="nombre" value="<?php echo $_SESSION['nombre']; ?>" placeholder="Nombre Completo" required id="nombre" readonly>
             <select name="nro_serie" id="nro_serie" required>
@@ -325,8 +325,24 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['devolver'])) {
             document.getElementById('nro_serie').value = nro_serie;
             document.getElementsByName('motivo')[0].value = motivo;
         }
+        document.getElementById("solicitudForm").addEventListener("submit", function(event) {
+            event.preventDefault(); // Detiene el envío normal
 
+            document.getElementById("loadingModal").style.display = "flex";
+
+            // Espera al repaint y luego envía el formulario
+            setTimeout(() => {
+                event.target.submit(); // Envía el formulario real
+            }, 1000); // Puedes aumentar a 500 si 300ms es muy poco
+        });
         </script>
+
+        <div id="loadingModal" class="modal" style="display: none;">
+            <div class="modal-content">
+                <p>Enviando solicitud...</p>
+            </div>
+        </div>
+
 </body>
 </html>
 <?php
